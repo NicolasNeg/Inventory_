@@ -80,46 +80,78 @@ function obtenerCategoriasParaSelect() {
 /**
  * Obtiene el historial filtrando por el ID_ORDEN de la celda activa
  */
+function _createInventoryReadRepository() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const invSheet = ss.getSheetByName('INVENTARIO');
+  const histSheet = ss.getSheetByName('HISTORICO');
+
+  return {
+    obtenerProductosLegacyCompatible() {
+      const fullRange = invSheet.getDataRange().getValues();
+      if (fullRange.length <= 1) return [];
+
+      return fullRange.slice(1).map((fila, index) => {
+        const nombreProducto = fila[2] ? String(fila[2]).trim() : "";
+        if (!nombreProducto) return null;
+
+        return {
+          idFila: index + 2,
+          idOrden: String(fila[0] || ""),
+          tipo: String(fila[1] || ""),
+          producto: nombreProducto,
+          marca: String(fila[3] || ""),
+          subModelo: String(fila[4] || ""),
+          autos: String(fila[5] || ""),
+          stockInicial: fila[6] || 0,
+          salidas: fila[7] || 0,
+          disponible: fila[8] || 0,
+          reStockStatus: String(fila[10] || ""),
+          movimientos: String(fila[11] || "0 MOVIMIENTOS"),
+          periodo: fila[12] instanceof Date
+            ? Utilities.formatDate(fila[12], "GMT-6", "MMMM yyyy").toUpperCase()
+            : String(fila[12] || "").toUpperCase(),
+          statusNota: String(fila[13] || ""),
+          idNotaRelacionada: String(fila[14] || "")
+        };
+      }).filter(item => item !== null);
+    },
+
+    obtenerMovimientosPorIdLegacyCompatible(subModeloInventario) {
+      const criterio = String(subModeloInventario || "").trim().toLowerCase();
+      const dataInv = invSheet.getDataRange().getValues();
+      const filaProducto = dataInv.find(f => String(f[4] || "").trim().toLowerCase() === criterio);
+
+      let nombreProd = filaProducto ? filaProducto[2] : "Producto";
+      let subProd = filaProducto ? `${filaProducto[3]} | ${filaProducto[4]}` : subModeloInventario;
+
+      const lastRow = histSheet.getLastRow();
+      if (lastRow <= 1) return { producto: nombreProd, sub: subProd, movimientos: [] };
+
+      const histData = histSheet.getRange(2, 1, lastRow - 1, 9).getValues();
+      const movimientos = histData
+        .filter(f => String(f[4] || "").trim().toLowerCase() === criterio)
+        .map(f => ({
+          fecha: f[0] instanceof Date ? Utilities.formatDate(f[0], "GMT-6", "dd/MM/yy HH:mm") : String(f[0]),
+          unidad: String(f[5] || ""),
+          cantidad: f[6] || 0,
+          autor: String(f[7] || ""),
+          notas: String(f[8] || "")
+        }))
+        .reverse();
+
+      return {
+        producto: nombreProd,
+        sub: subProd,
+        movimientos: movimientos
+      };
+    }
+  };
+}
+
 function obtenerMovimientosPorId(subModeloInventario) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const invSheet = ss.getSheetByName('INVENTARIO');
-    const histSheet = ss.getSheetByName('HISTORICO');
-    
-    // Normalizamos el criterio (minúsculas y sin espacios)
-    const criterio = String(subModeloInventario || "").trim().toLowerCase();
-    
-    // 1. Obtener Info del Producto desde INVENTARIO
-    const dataInv = invSheet.getDataRange().getValues();
-    // Columna E es índice 4
-    const filaProducto = dataInv.find(f => String(f[4] || "").trim().toLowerCase() === criterio);
-    
-    let nombreProd = filaProducto ? filaProducto[2] : "Producto";
-    let subProd = filaProducto ? `${filaProducto[3]} | ${filaProducto[4]}` : subModeloInventario;
-
-    // 2. Obtener Movimientos desde HISTORICO
-    const lastRow = histSheet.getLastRow();
-    if (lastRow <= 1) return { producto: nombreProd, sub: subProd, movimientos: [] };
-
-    const histData = histSheet.getRange(2, 1, lastRow - 1, 9).getValues();
-    
-    // Filtramos el histórico comparando la Columna E (índice 4) con el criterio
-    const movimientos = histData
-      .filter(f => String(f[4] || "").trim().toLowerCase() === criterio)
-      .map(f => ({
-        fecha: f[0] instanceof Date ? Utilities.formatDate(f[0], "GMT-6", "dd/MM/yy HH:mm") : String(f[0]),
-        unidad: String(f[5] || ""),
-        cantidad: f[6] || 0,
-        autor: String(f[7] || ""),
-        notas: String(f[8] || "")
-      }))
-      .reverse();
-
-    return {
-      producto: nombreProd,
-      sub: subProd,
-      movimientos: movimientos
-    };
+    const repository = _createInventoryReadRepository();
+    return repository.obtenerMovimientosPorIdLegacyCompatible(subModeloInventario);
 
   } catch (e) {
     return { error: e.toString() };
@@ -174,38 +206,8 @@ function obtenerTodoElHistorico() {
 
 function obtenerProductos() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName('INVENTARIO');
-    const fullRange = sheet.getDataRange().getValues();
-    if (fullRange.length <= 1) return [];
-
-    const data = fullRange.slice(1).map((fila, index) => {
-      const nombreProducto = fila[2] ? String(fila[2]).trim() : "";
-      if (!nombreProducto) return null;
-
-      return {
-        idFila: index + 2,
-        idOrden: String(fila[0] || ""),
-        tipo: String(fila[1] || ""),
-        producto: nombreProducto,
-        marca: String(fila[3] || ""),
-        subModelo: String(fila[4] || ""),
-        autos: String(fila[5] || ""),
-        stockInicial: fila[6] || 0,   // Col G
-        salidas: fila[7] || 0,        // Col H
-        disponible: fila[8] || 0,     // Col I
-        reStockStatus: String(fila[10] || ""),
-        movimientos: String(fila[11] || "0 MOVIMIENTOS"),
-        periodo: fila[12] instanceof Date 
-                 ? Utilities.formatDate(fila[12], "GMT-6", "MMMM yyyy").toUpperCase() 
-                 : String(fila[12] || "").toUpperCase(),
-        // --- NUEVAS COLUMNAS PARA NOTAS ---
-        statusNota: String(fila[13] || ""), // Columna N (PENDIENTE)
-        idNotaRelacionada: String(fila[14] || "") // Columna O (id_nota)
-      };
-    }).filter(item => item !== null);
-
-    return data;
+    const repository = _createInventoryReadRepository();
+    return repository.obtenerProductosLegacyCompatible();
   } catch (e) {
     console.error("Error en obtenerProductos: " + e.message);
     return [];

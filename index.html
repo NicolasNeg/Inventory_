@@ -6,6 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    (function () {
+      if (window.google && window.google.script && window.google.script.run) return;
+
+      var query = new URLSearchParams(window.location.search);
+      var forcedMock = query.get("mock") === "1";
+      var isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      var isFileProtocol = window.location.protocol === "file:";
+      var isGithubPages = window.location.hostname.endsWith("github.io");
+      var shouldLoadMock = forcedMock || isLocalHost || isFileProtocol || isGithubPages;
+
+      if (!shouldLoadMock) return;
+
+      var script = document.createElement("script");
+      script.src = "./src/dev/mockRuntime.js";
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  </script>
 
   <style>
     body { background:#f3f4f6; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
