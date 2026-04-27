@@ -128,13 +128,12 @@
     if(loader) loader.style.display = 'block';
     document.getElementById('listaCards').innerHTML = '';
 
-    google.script.run
-      .withSuccessHandler(mostrarHistorial)
-      .withFailureHandler(err => {
+    inventoryApi.obtenerMovimientosPorId(subModelo)
+      .then(mostrarHistorial)
+      .catch(err => {
          if(document.getElementById('loading')) document.getElementById('loading').style.display = 'none';
          document.getElementById('listaCards').innerHTML = `<p class="center red-text">Error: ${err.message}</p>`;
-      })
-      .obtenerMovimientosPorId(subModelo); 
+      });
   };
 
   // 2. FUNCIÓN PARA MOSTRAR LOS DATOS

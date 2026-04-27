@@ -201,9 +201,9 @@
     cargarNotas();
 
     // Cargar productos para el buscador del modal
-    google.script.run.withSuccessHandler(res => {
+    inventoryApi.obtenerListaProductosSimplificada().then(res => {
       productosRaw = res;
-    }).obtenerListaProductosSimplificada();
+    });
 
     // Lógica para abrir desde la campana del inventario
     // Usamos un intervalo corto para asegurar que el contenedor ya existe en el DOM
@@ -228,9 +228,9 @@ window.onload = () => {
     cargarNotas();
     
     // Traemos la lista de productos para el buscador
-    google.script.run.withSuccessHandler(res => {
+    inventoryApi.obtenerListaProductosSimplificada().then(res => {
       productosRaw = res;
-    }).obtenerListaProductosSimplificada();
+    });
 
     // ¡EL TRUCO! Revisamos si venimos redirigidos desde el Inventario
     setTimeout(() => {
@@ -300,7 +300,7 @@ productoSeleccionado = p.producto;
 
     function cargarNotas() {
       document.getElementById('contenedorNotas').innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px">Cargando...</p>';
-      google.script.run.withSuccessHandler(renderizarNotas).obtenerNotasHistorial();
+      inventoryApi.obtenerNotasHistorial().then(renderizarNotas);
     }
 
     
@@ -375,14 +375,14 @@ function guardarNota() {
     document.getElementById('btnTxt').innerText = "GUARDANDO...";
     document.getElementById('btnLoad').style.display = "block";
 
-    google.script.run.withSuccessHandler(() => {
+    inventoryApi.crearNuevaNota(d).then(() => {
       btn.disabled = false;
       document.getElementById('btnTxt').innerText = "PUBLICAR NOTA";
       document.getElementById('btnLoad').style.display = "none";
       cerrarModales();
       cargarNotas();
       resetCampos();
-    }).crearNuevaNota(d);
+    });
   }
 
 
@@ -443,8 +443,7 @@ function ejecutarResolucion() {
     };
 
     // 3. Enviamos los datos al servidor
-    google.script.run
-      .withSuccessHandler(res => {
+    inventoryApi.resolverNota(datos).then(res => {
         btn.disabled = false;
         document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
         
@@ -457,19 +456,18 @@ function ejecutarResolucion() {
           alert("Hubo un problema al resolver la nota. Intenta de nuevo.");
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         btn.disabled = false;
         document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
         alert("Error de conexión: " + err.message);
-      })
-      .resolverNota(datos); // Mandamos el objeto 'datos' a tu función resolverNota(d)
+      }); // Mandamos el objeto 'datos' a tu función resolverNota(d)
   }
 
     function imprimirReporte() {
-      google.script.run.withSuccessHandler(html => {
+      inventoryApi.generarReporteHTML('HISTORIAL_NOTAS_PENDIENTES').then(html => {
         var win = window.open();
         win.document.write(html);
-      }).generarReporteHTML('HISTORIAL_NOTAS_PENDIENTES');
+      });
     }
 
     function confirmarSeleccion(index, tipo) {

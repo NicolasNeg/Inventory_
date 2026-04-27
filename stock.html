@@ -129,9 +129,9 @@
       seleccionar(window.productoSeleccionadoParaFormulario);
       
       // Cargamos la DB en silencio por si deciden regresar a la lista
-      google.script.run.withSuccessHandler(data => { 
-        DB_STOCK_ADD = data; 
-      }).obtenerProductosParaAgregar();
+      inventoryApi.obtenerProductosParaAgregar().then(data => {
+        DB_STOCK_ADD = data;
+      });
 
       window.productoSeleccionadoParaFormulario = null; 
     } else {
@@ -141,12 +141,10 @@
   }
 
   function cargarInsumos() {
-    google.script.run
-      .withSuccessHandler(data => { 
-        DB_STOCK_ADD = data; 
-        renderizarLista(DB_STOCK_ADD);
-      })
-      .obtenerProductosParaAgregar();
+    inventoryApi.obtenerProductosParaAgregar().then(data => {
+      DB_STOCK_ADD = data;
+      renderizarLista(DB_STOCK_ADD);
+    });
   }
 
   function renderizarLista(lista) {
@@ -243,11 +241,13 @@ function regresar() {
       notas: document.getElementById('notas').value.trim()
     };
 
-    google.script.run
-      .withSuccessHandler(() => {
-         if(typeof cargarVista === 'function') cargarVista('inventario');
-      })
-      .agregarStock(d);
+    inventoryApi.agregarStock(d).then(() => {
+      if(typeof cargarVista === 'function') cargarVista('inventario');
+    }).catch(err => {
+      if (typeof M !== 'undefined') M.toast({html: `❌ ${err.message || err}`, classes: 'red'});
+      btn.disabled = false;
+      btn.innerHTML = '<i class="material-icons left">add_moderator</i> CONFIRMAR CARGA';
+    });
 } 
 
   // Atajo de teclado: Enter en cantidad confirma

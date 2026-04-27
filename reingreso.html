@@ -194,9 +194,9 @@ select.browser-default {
       seleccionarProducto(window.productoSeleccionadoParaFormulario);
       
       // Cargamos la base de datos de apoyo en silencio por si regresan a la lista
-      google.script.run.withSuccessHandler(data => { 
-        DB_REINGRESO = data; 
-      }).obtenerProductosReingreso();
+      inventoryApi.obtenerProductosReingreso().then(data => {
+        DB_REINGRESO = data;
+      });
 
       // Limpiamos la variable global para no repetir el proceso por error
       window.productoSeleccionadoParaFormulario = null; 
@@ -207,10 +207,10 @@ select.browser-default {
   }
 
   function cargarInsumos() {
-    google.script.run.withSuccessHandler(data => {
+    inventoryApi.obtenerProductosReingreso().then(data => {
       DB_REINGRESO = data;
       renderizarLista(DB_REINGRESO);
-    }).obtenerProductosReingreso();
+    });
   }
 
   function filtrar() {
@@ -299,7 +299,7 @@ select.browser-default {
       fecha: document.getElementById('fecha').value
     };
 
-    google.script.run.withSuccessHandler(() => {
+    inventoryApi.registrarReingreso(d).then(() => {
       document.getElementById('successAnim').style.display = 'flex';
       // En lugar de cerrar el host, regresamos al inventario después de 2 segundos
       setTimeout(() => {
@@ -307,7 +307,11 @@ select.browser-default {
         // Si tienes una función para volver al inventario en el index, úsala aquí:
         if(typeof cargarVista === 'function') cargarVista('inventario');
       }, 2000);
-    }).registrarReingreso(d);
+    }).catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = `<span>CONFIRMAR RE-INGRESO</span>`;
+      M.toast({html: `Error: ${err.message || err}`});
+    });
   }
 
   // IMPORTANTE: Llamada de respaldo por si se carga sola la página

@@ -81,13 +81,12 @@
      */
     window.cargarHistorialCompleto = function() {
       console.log("Iniciando carga de movimientos ordenados...");
-      google.script.run
-        .withSuccessHandler(renderizarTabla)
-        .withFailureHandler(err => {
+      inventoryApi.obtenerTodoElHistorico()
+        .then(renderizarTabla)
+        .catch(err => {
           document.getElementById('tablaCuerpo').innerHTML = 
             `<tr><td colspan="6" class="center red-text">Error al cargar: ${err.message}</td></tr>`;
-        })
-        .obtenerTodoElHistorico(); 
+        });
     };
 
     /**

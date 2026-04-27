@@ -1,62 +1,235 @@
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-  
-    <div class="p-4 border-b bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h3 class="text-lg font-bold text-slate-800">Panel de Inventario</h3>
-        <p class="text-xs text-slate-500">Estado actual de insumos y refacciones</p>
-      </div>
-      
-      <div class="relative w-full md:w-72">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+<div class="space-y-5 pb-6">
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Requiere surtido</p>
+          <p id="kpi-requiere-surtido" class="mt-2 text-3xl font-black text-slate-900 tabular-nums">—</p>
+          <p class="mt-1 text-[10px] text-slate-500">Ítems con estado PEDIR STOCK</p>
+        </div>
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+          <i class="material-icons">inventory</i>
         </span>
-        <input type="text" 
-               id="buscador" 
-               placeholder="Buscar producto, marca..." 
-               class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
       </div>
     </div>
-  
+
+    <div class="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-red-700">Stock crítico</p>
+          <p id="kpi-stock-critico" class="mt-2 text-3xl font-black text-slate-900 tabular-nums">—</p>
+          <p class="mt-1 text-[10px] text-slate-500">Disponible bajo umbral operativo</p>
+        </div>
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700">
+          <i class="material-icons">warning</i>
+        </span>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Notas activas</p>
+          <p id="kpi-notas-activas" class="mt-2 text-3xl font-black text-slate-900 tabular-nums">—</p>
+          <p class="mt-1 text-[10px] text-slate-500">Seguimiento pendiente</p>
+        </div>
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+          <i class="material-icons">notifications_active</i>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel principal: filtros + buscador + Foto QR -->
+  <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div class="border-b border-slate-100 bg-slate-50/90 p-5 md:p-6">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-xl font-black text-slate-900 tracking-tight">Panel de Inventario</h3>
+          <p class="mt-1 text-sm text-slate-500">Estado actual de insumos y refacciones · filtros por categoría</p>
+
+          <div id="contenedor-chips-categoria" class="mt-4 flex flex-wrap gap-2">
+            <button type="button" data-chip-cat="__TODOS__"
+              class="chip-categoria rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 shadow-sm hover:bg-slate-100">
+              Todos
+            </button>
+          </div>
+        </div>
+
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:min-w-[520px]">
+          <div class="relative min-w-0 flex-1">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+              <i class="material-icons text-[22px]">search</i>
+            </span>
+            <input type="text" id="buscador" placeholder="Buscar producto, marca, sub-modelo, tipo..."
+              class="block w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-4 text-base font-medium text-slate-800 shadow-inner placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+          </div>
+
+          <button type="button" onclick="abrirFotoQrInventario()"
+            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-md hover:bg-slate-800 active:scale-[0.99]">
+            <i class="material-icons text-[22px]">qr_code_scanner</i>
+            Foto QR
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+      <table class="w-full min-w-[1100px] border-collapse text-left">
         <thead>
-          <tr class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600 font-bold">
-            <th class="p-3 border-b">Tipo</th>
-            <th class="p-3 border-b">Producto / Periodo / Autos sugeridos</th>
-            <th class="p-3 border-b">Marca</th>
-            <th class="p-3 border-b">Sub-Modelo</th>
-            <th class="p-3 border-b text-center">Total </th>
-            <th class="p-3 border-b text-center">Out </th>
-            <th class="p-3 border-b text-center">Disponible</th>
-            <th class="p-3 border-b text-center">Movimientos</th>
-            <th class="p-3 border-b text-center">Acciones</th>
+          <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600">
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3">Tipo</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 min-w-[260px]">Producto / Periodo / Autos sugeridos</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3">Marca</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3">Sub-Modelo</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 text-center">Total</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 text-center">Out</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 text-center">Disponible</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 text-center">Movimientos</th>
+            <th class="sticky top-0 z-10 border-b border-slate-200 p-3 text-center">Acciones</th>
           </tr>
         </thead>
-        <tbody id="tablaInventario" class="divide-y divide-slate-100">
+        <tbody id="tablaInventario" class="divide-y divide-slate-100 bg-white">
           <tr>
-            <td colspan="6" class="p-10 text-center">
-              <div class="flex flex-col items-center gap-2">
-                <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <span class="text-slate-400 text-sm">Sincronizando con Base de datos...</span>
+            <td colspan="9" class="p-12 text-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                <span class="text-sm font-semibold text-slate-500">Sincronizando con base de datos…</span>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    
-    <div class="p-3 bg-slate-50 border-t text-[10px] text-slate-400 flex justify-between">
+
+    <div class="flex flex-col gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3 text-[10px] text-slate-400 sm:flex-row sm:items-center sm:justify-between">
       <span>© 2026 Sistema de Gestión de Activos</span>
-      <span class="font-bold">MEX Logística</span>
+      <span class="font-bold text-slate-500">MEX Logística</span>
     </div>
   </div>
-  
-  <script>
-    /**
-     * NOTA: No es necesario poner funciones de carga aquí 
-     * porque el index.html se encarga de llamar a obtenerProductos()
-     * en cuanto detecta que este archivo terminó de cargarse.
-     */
-  </script>
+</div>
+
+<script>
+(function () {
+  window.__filtroCategoriaInventario = "__TODOS__";
+
+  function escapeAttr(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+
+  window.actualizarKpisInventario = function (productos) {
+    var list = productos || [];
+    var surtido = 0;
+    var critico = 0;
+    var notas = 0;
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      var rs = String(p.reStockStatus || "");
+      var disp = Number(p.disponible);
+      if (rs.indexOf("PEDIR STOCK") !== -1) surtido++;
+      if (!isNaN(disp) && disp <= 2) critico++;
+      if (p.statusNota === "PENDIENTE") notas++;
+    }
+    var el1 = document.getElementById("kpi-requiere-surtido");
+    var el2 = document.getElementById("kpi-stock-critico");
+    var el3 = document.getElementById("kpi-notas-activas");
+    if (el1) el1.textContent = String(surtido);
+    if (el2) el2.textContent = String(critico);
+    if (el3) el3.textContent = String(notas);
+  };
+
+  window.reconstruirChipsCategoriaInventario = function (productos) {
+    var cont = document.getElementById("contenedor-chips-categoria");
+    if (!cont) return;
+    var set = {};
+    for (var i = 0; i < (productos || []).length; i++) {
+      var t = String((productos[i] && productos[i].tipo) || "").trim();
+      if (t) set[t] = true;
+    }
+    var cats = Object.keys(set).sort();
+    var cur = window.__filtroCategoriaInventario;
+    var html =
+      '<button type="button" data-chip-cat="__TODOS__" class="chip-categoria rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-sm ' +
+      (cur === "__TODOS__"
+        ? "border-blue-600 bg-blue-600 text-white"
+        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100") +
+      '">Todos</button>';
+    for (var j = 0; j < cats.length; j++) {
+      var c = cats[j];
+      var active = cur === c;
+      html +=
+        '<button type="button" data-chip-cat="' +
+        escapeAttr(c) +
+        '" class="chip-categoria rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-sm ' +
+        (active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100") +
+        '">' +
+        escapeAttr(c) +
+        "</button>";
+    }
+    cont.innerHTML = html;
+  };
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest(".chip-categoria");
+    if (!btn || !btn.getAttribute) return;
+    var cat = btn.getAttribute("data-chip-cat");
+    if (cat == null) return;
+    window.__filtroCategoriaInventario = cat;
+    if (typeof window.filtrarFilasInventario === "function") window.filtrarFilasInventario();
+    if (typeof window.reconstruirChipsCategoriaInventario === "function" && window.__ultimosProductosInventario) {
+      window.reconstruirChipsCategoriaInventario(window.__ultimosProductosInventario);
+    }
+  });
+
+  window.filtrarFilasInventario = function () {
+    var input = document.getElementById("buscador");
+    var termino = (input && input.value ? input.value : "").toLowerCase().trim();
+    var filas = document.querySelectorAll("#tablaInventario tr[data-row-main]");
+    var chip = window.__filtroCategoriaInventario || "__TODOS__";
+
+    filas.forEach(function (fila) {
+      var idFila = fila.getAttribute("data-id-fila");
+      var tipo = String(fila.getAttribute("data-tipo") || "");
+      var filaExtra = idFila ? document.getElementById("extra-" + idFila) : null;
+      var texto = fila.innerText.toLowerCase();
+      var okChip = chip === "__TODOS__" || tipo === chip;
+      var okBus = !termino || texto.indexOf(termino) !== -1;
+      var visible = okChip && okBus;
+      if (visible) {
+        fila.classList.remove("fila-oculta");
+        if (filaExtra) filaExtra.classList.remove("fila-oculta");
+      } else {
+        fila.classList.add("fila-oculta");
+        if (filaExtra) filaExtra.classList.add("fila-oculta");
+      }
+    });
+
+    if (typeof filaActivaId !== "undefined") filaActivaId = null;
+    document.querySelectorAll(".faja-acciones").forEach(function (w) {
+      w.classList.remove("abierta");
+    });
+  };
+
+  window.abrirFotoQrInventario = function () {
+    var input = document.getElementById("input-foto-qr-inventario");
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "file";
+      input.id = "input-foto-qr-inventario";
+      input.accept = "image/*";
+      input.capture = "environment";
+      input.style.display = "none";
+      document.body.appendChild(input);
+      input.addEventListener("change", function () {
+        if (input.files && input.files[0]) {
+          console.log("[UI] Foto QR / captura lista para procesamiento en Apps Script.");
+        }
+        input.value = "";
+      });
+    }
+    input.click();
+  };
+})();
+</script>

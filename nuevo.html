@@ -305,7 +305,7 @@
     mesSel.value = meses[new Date().getMonth()];
   }
   // 1. Llamada al GS para obtener las categorías
-  google.script.run.withSuccessHandler(cats => {
+  inventoryApi.obtenerCategoriasParaSelect ? inventoryApi.obtenerCategoriasParaSelect().then(cats => {
   const sel = document.getElementById('tipo');
   sel.innerHTML = '<option value="" disabled selected>Seleccione categoría técnica...</option>';
   
@@ -323,7 +323,7 @@
 
   // Si usas 'browser-default' en el HTML, ESTA LÍNEA DEBE COMENTARSE:
   // M.FormSelect.init(sel); 
-}).obtenerCategoriasParaSelect();
+}) : Promise.resolve([]);
 
   // 2. Cargar los modelos de autos (Chips)
   if (typeof cargarModelos === 'function') cargarModelos();
@@ -362,7 +362,7 @@ function crearNuevoModelo() {
 
     M.toast({html: '⏳ Registrando modelo...', classes: 'rounded blue'});
     
-    google.script.run.withSuccessHandler(res => {
+    inventoryApi.insertarNuevoModeloAuto(nuevo).then(res => {
       if (res.success) {
         M.toast({html: '✅ Modelo añadido', classes: 'rounded green'});
         DB_MODELOS.push(res.modelo);
@@ -371,7 +371,7 @@ function crearNuevoModelo() {
         document.getElementById('btnNuevoModeloContainer').style.display = 'none';
         renderizarChips(DB_MODELOS.sort());
       }
-    }).insertarNuevoModeloAuto(nuevo);
+    });
   }
 
 function toggleAuto(elemento, valor) {
@@ -386,10 +386,10 @@ function toggleAuto(elemento, valor) {
 
 
   function cargarModelos() {
-    google.script.run.withSuccessHandler(listaAutos => {
+    inventoryApi.obtenerAutosParaSelect().then(listaAutos => {
       DB_MODELOS = listaAutos.sort();
       renderizarChips(DB_MODELOS);
-    }).obtenerAutosParaSelect();
+    });
   }
 
   function renderizarChips(lista) {
@@ -434,8 +434,8 @@ function toggleAuto(elemento, valor) {
     btn.disabled = true;
     btn.innerHTML = '<i class="material-icons">sync</i> GUARDANDO...';
 
-    google.script.run
-      .withSuccessHandler(() => {
+    inventoryApi.guardarProducto(d)
+      .then(() => {
          msg.style.display = 'block';
          msg.style.backgroundColor = '#dcfce7';
          msg.style.color = '#166534';
@@ -446,7 +446,12 @@ function toggleAuto(elemento, valor) {
            cargarVista('inventario', btnInv);
          }, 1500);
       })
-      .guardarProducto(d);
+      .catch(err => {
+        msg.style.display = 'block';
+        msg.style.backgroundColor = '#fee2e2';
+        msg.style.color = '#991b1b';
+        msg.innerHTML = `<i class="material-icons" style="vertical-align:bottom; font-size:1.2rem">error</i> ${err.message || err}`;
+      });
   }
 </script>
 </body>

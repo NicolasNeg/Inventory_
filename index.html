@@ -5,26 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script>
-    (function () {
-      if (window.google && window.google.script && window.google.script.run) return;
-
-      var query = new URLSearchParams(window.location.search);
-      var forcedMock = query.get("mock") === "1";
-      var isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      var isFileProtocol = window.location.protocol === "file:";
-      var isGithubPages = window.location.hostname.endsWith("github.io");
-      var shouldLoadMock = forcedMock || isLocalHost || isFileProtocol || isGithubPages;
-
-      if (!shouldLoadMock) return;
-
-      var script = document.createElement("script");
-      script.src = "./src/dev/mockRuntime.js";
-      script.defer = true;
-      document.head.appendChild(script);
-    })();
-  </script>
+  <script src="./src/api/inventoryApi.global.js"></script>
 
   <style>
     body { background:#f3f4f6; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
@@ -46,7 +31,7 @@
       top: 0;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 50;
-      background-color: #1e293b; /* slate-800 */
+      background-color: #0f172a; /* slate-900 — barra lateral productiva */
     }
 
     /* Clase para ocultar el menú sacándolo de la pantalla */
@@ -161,6 +146,9 @@ tr.seleccionada {
 
 
 @media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
   /* El sidebar se oculta totalmente y flota sobre el contenido */
   #sidebar {
     position: fixed;
@@ -287,17 +275,49 @@ tr.seleccionada {
 
   <div class="content">
 
-    <div class="bg-white shadow-sm p-3 flex justify-between items-center border-b px-6">
-      <div class="flex items-center gap-4">
-        <button onclick="toggleSidebar()" class="p-2 rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
-          <i class="material-icons">menu</i>
-        </button>
-        <span class="font-bold text-slate-700 text-sm tracking-widest uppercase">Sistema Inventario 2026</span>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-        <span class="text-[10px] font-bold text-slate-400">ONLINE</span>
+    <div class="bg-white shadow-sm border-b border-slate-200">
+      <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:px-6">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <button type="button" onclick="toggleSidebar()" class="rounded-md p-2 text-slate-600 transition-colors hover:bg-gray-100">
+            <i class="material-icons">menu</i>
+          </button>
+          <div class="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true"></div>
+          <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Sistema Inventario 2026</span>
+          <nav class="flex w-full flex-wrap items-center gap-1 sm:w-auto lg:gap-2" aria-label="Accesos rápidos">
+            <button type="button" onclick="irTopbar('notas')"
+              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
+              Centro de alertas
+            </button>
+            <button type="button" onclick="irTopbar('reportes')"
+              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
+              Autorizaciones
+            </button>
+            <button type="button" onclick="irTopbar('historial_movimientos')"
+              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
+              Gestión de usuarios
+            </button>
+          </nav>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <button type="button" onclick="enviarWhatsAppResumenInventario()"
+            class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-emerald-800 hover:bg-emerald-100">
+            <i class="material-icons text-[18px]">chat</i>
+            Enviar WhatsApp
+          </button>
+          <button type="button" onclick="imprimirPdfBarraSuperior()"
+            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-800 hover:bg-slate-100">
+            <i class="material-icons text-[18px]">picture_as_pdf</i>
+            Imprimir PDF
+          </button>
+          <div class="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sistema en línea</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -305,6 +325,60 @@ tr.seleccionada {
   </div>
 
 <script>
+function irTopbar(destino) {
+  const sel =
+    destino === 'notas'
+      ? 'button[onclick*="notas"]'
+      : destino === 'reportes'
+        ? 'button[onclick*="reportes"]'
+        : destino === 'historial_movimientos'
+          ? 'button[onclick*="historial_movimientos"]'
+          : null;
+  const el = sel ? document.querySelector(sel) : null;
+  cargarVista(destino, el || undefined);
+}
+
+function enviarWhatsAppResumenInventario() {
+  inventoryApi
+    .obtenerProductos()
+    .then(function (productos) {
+      const lines = ['*MEX Insumos — Resumen de inventario*', ''];
+      (productos || []).forEach(function (p) {
+        lines.push(
+          '• ' +
+            (p.producto || '') +
+            ' | Disp: ' +
+            (p.disponible != null ? p.disponible : '') +
+            ' | ' +
+            (p.subModelo || '')
+        );
+      });
+      const url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
+      window.open(url, '_blank', 'noopener,noreferrer');
+    })
+    .catch(function (err) {
+      console.error(err);
+      alert('No se pudo preparar el mensaje de WhatsApp.');
+    });
+}
+
+function imprimirPdfBarraSuperior() {
+  inventoryApi
+    .exportarHistorialPDF()
+    .then(function (dataUrl) {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'historial-inventario.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(function (err) {
+      console.error(err);
+      alert('No se pudo generar el PDF.');
+    });
+}
+
 window.onload = () => {
   // 1. Buscamos el botón de inventario específicamente por su acción
   const btnInventario = document.querySelector('button[onclick*="inventario"]');
@@ -338,7 +412,7 @@ function cargarVista(nombreVista, elemento) {
   vista.innerHTML = `<div class="flex justify-center items-center h-full"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>`;
 
   // 2. Carga de contenido desde el servidor
-  google.script.run.withSuccessHandler(html => {
+  inventoryApi.cargarVistaParcial(nombreVista).then(html => {
     vista.innerHTML = html;
 
     // 3. DESPERTAR SCRIPTS (Universal)
@@ -357,17 +431,17 @@ function cargarVista(nombreVista, elemento) {
     }
 if (nombreVista === 'historialinsumos') {
       console.log("Activando carga de datos del historial...");
-      google.script.run
-        .withSuccessHandler(dibujarHistorial) // Esta función vive en historialinsumos.html
-        .withFailureHandler(err => console.error("Error al cargar historial:", err))
-        .obtenerHistorialCombinado();
+      inventoryApi.obtenerHistorialCombinado()
+        .then(dibujarHistorial) // Esta función vive en historialinsumos.html
+        .catch(err => console.error("Error al cargar historial:", err));
     }
     // Si es inventario, cargamos los datos inmediatamente
     if (nombreVista === 'inventario') {
-        google.script.run.withSuccessHandler(renderTabla).obtenerProductos();
+        inventoryApi.obtenerProductos().then(renderTabla);
     }
-
-  }).cargarVistaParcial(nombreVista);
+  }).catch(err => {
+    vista.innerHTML = `<div class="p-6 text-red-600 font-bold">Error al cargar vista: ${err.message || err}</div>`;
+  });
 }
 
 function renderTabla(data) {
@@ -376,6 +450,11 @@ function renderTabla(data) {
   
   if (!data || data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" class="p-10 text-center text-gray-400">No hay productos.</td></tr>';
+    window.__ultimosProductosInventario = [];
+    if (typeof window.actualizarKpisInventario === 'function') window.actualizarKpisInventario([]);
+    if (typeof window.reconstruirChipsCategoriaInventario === 'function') {
+      window.reconstruirChipsCategoriaInventario([]);
+    }
     return;
   }
 
@@ -386,9 +465,13 @@ function renderTabla(data) {
 
     // "p.autos" debe venir desde tu objeto de datos procesado en el GS
     const unidadesCompatibles = p.autos ? p.autos : 'Universal / No especificado';
+    const tipoAttr = String(p.tipo != null ? p.tipo : '').replace(/"/g, '&quot;');
 
     return `
       <tr onclick="toggleAcciones(this, ${p.idFila})" 
+          data-row-main="true"
+          data-id-fila="${p.idFila}"
+          data-tipo="${tipoAttr}"
           class="${tieneAlertaStock ? 'bg-red-50' : 'border-b hover:bg-slate-50'} transition-colors cursor-pointer mobile-card-style">
         
         <td class="p-3 text-[10px] text-gray-400 font-bold uppercase hide-on-mobile border-r border-gray-50">${p.tipo}</td>
@@ -460,6 +543,11 @@ function renderTabla(data) {
       </tr>
     `;
   }).join('');
+
+  window.__ultimosProductosInventario = data;
+  if (typeof window.actualizarKpisInventario === 'function') window.actualizarKpisInventario(data);
+  if (typeof window.reconstruirChipsCategoriaInventario === 'function') window.reconstruirChipsCategoriaInventario(data);
+  if (typeof window.filtrarFilasInventario === 'function') window.filtrarFilasInventario();
 }
 
 
@@ -484,7 +572,7 @@ function toggleAcciones(filaElemento, idFila) {
   // Cerrar todos los demás
   document.querySelectorAll('.faja-acciones').forEach(w => w.classList.remove('abierta'));
   document.querySelectorAll("[id^='extra-']").forEach(ex => ex.classList.add('fila-oculta'));
-  document.querySelectorAll('tr').forEach(f => f.classList.remove('seleccionada'));
+  document.querySelectorAll('#tablaInventario tr').forEach(f => f.classList.remove('seleccionada'));
 
   // ABRIR EL SELECCIONADO
   filaExtra.classList.remove('fila-oculta'); // Quitamos la clase del buscador
@@ -545,7 +633,7 @@ function verHistorialDetallado(subModeloCodificado) {
     </div>`;
 
   // Cargamos la vista. El script de historial.html se encargará del resto.
-  google.script.run.withSuccessHandler(html => {
+  inventoryApi.cargarVistaParcial('historial').then(html => {
     vista.innerHTML = html;
     
     /* TRUCO VITAL: Forzamos la ejecución de los scripts inyectados
@@ -555,7 +643,9 @@ function verHistorialDetallado(subModeloCodificado) {
     for (let i = 0; i < scripts.length; i++) {
       eval(scripts[i].innerText);
     }
-  }).cargarVistaParcial('historial'); 
+  }).catch(err => {
+    console.error("Error abriendo historial:", err);
+  });
 }
 
 
@@ -567,7 +657,7 @@ function verAlertaRapida(idNota) {
   modal.style.display = 'flex';
   contenido.innerHTML = '<p class="animate-pulse">Cargando detalles...</p>';
   
-  google.script.run.withSuccessHandler(res => {
+  inventoryApi.obtenerDetalleNotaPorId(idNota).then(res => {
     if(res.success) {
       contenido.innerHTML = `
         <p><strong>Fecha:</strong> ${res.fecha}</p>
@@ -582,7 +672,9 @@ function verAlertaRapida(idNota) {
         </button>
       `;
     }
-  }).obtenerDetalleNotaPorId(idNota);
+  }).catch(err => {
+    contenido.innerHTML = `<p class="text-red-500">Error: ${err.message || err}</p>`;
+  });
 }
 
 function cerrarAlerta() {
@@ -604,25 +696,27 @@ function irAResolverNota(idFila) {
 
 document.addEventListener('input', function (e) {
   if (e.target.id === 'buscador') {
+    if (typeof window.filtrarFilasInventario === 'function') {
+      window.filtrarFilasInventario();
+      return;
+    }
     const termino = e.target.value.toLowerCase().trim();
     const filasPrincipales = document.querySelectorAll("#tablaInventario tr:not([id^='extra-'])");
-    
+
     filasPrincipales.forEach(fila => {
-      const idFila = fila.getAttribute('onclick').match(/\d+/)[0];
-      const filaExtra = document.getElementById(`extra-${idFila}`);
+      const onclk = fila.getAttribute('onclick');
+      const idFila = onclk && onclk.match(/\d+/) ? onclk.match(/\d+/)[0] : null;
+      const filaExtra = idFila ? document.getElementById(`extra-${idFila}`) : null;
       const texto = fila.innerText.toLowerCase();
 
       if (texto.includes(termino)) {
         fila.classList.remove('fila-oculta');
-        // Si borramos la búsqueda, no mostramos los extras automáticamente,
-        // solo los dejamos disponibles para que el click funcione.
       } else {
         fila.classList.add('fila-oculta');
         if (filaExtra) filaExtra.classList.add('fila-oculta');
       }
     });
 
-    // Resetear el estado para que el siguiente click sea limpio
     filaActivaId = null;
     document.querySelectorAll('.faja-acciones').forEach(w => w.classList.remove('abierta'));
   }

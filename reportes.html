@@ -65,8 +65,8 @@
     document.getElementById('contenidoMenu').style.display = 'none';
     document.getElementById('loader').style.display = 'block';
     
-    google.script.run
-      .withSuccessHandler(function(htmlString) {
+    inventoryApi.generarReporteHTML(tipo)
+      .then(function(htmlString) {
           // 2. Crear un Blob para que el navegador lo trate como un archivo real
           // Esto soluciona problemas de bloqueos en navegadores modernos
           var blob = new Blob([htmlString], {type: 'text/html'});
@@ -75,13 +75,16 @@
           var win = window.open(url, "_blank");
           
           // Cerramos el selector
-          google.script.host.close();
+          if (window.google && window.google.script && window.google.script.host) {
+            window.google.script.host.close();
+          }
       })
-      .withFailureHandler(function(err) {
+      .catch(function(err) {
           alert("Error: " + err.message);
-          google.script.host.close();
-      })
-      .generarReporteHTML(tipo);
+          if (window.google && window.google.script && window.google.script.host) {
+            window.google.script.host.close();
+          }
+      });
   }
 </script>
 </body>

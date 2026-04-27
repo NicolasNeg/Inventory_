@@ -215,9 +215,9 @@ function inicializarRetiro() {
       seleccionarProducto(window.productoSeleccionadoParaFormulario);
       
       // Cargamos la base de datos de apoyo en silencio
-      google.script.run.withSuccessHandler(data => { 
-        DB_RETIRO = data; 
-      }).obtenerProductosSalida();
+      inventoryApi.obtenerProductosSalida().then(data => {
+        DB_RETIRO = data;
+      });
 
       window.productoSeleccionadoParaFormulario = null; 
     } else {
@@ -227,10 +227,10 @@ function inicializarRetiro() {
   }
 
 function cargarInsumos() {
-    google.script.run.withSuccessHandler(data => {
+    inventoryApi.obtenerProductosSalida().then(data => {
       DB_RETIRO = data;
       renderizarLista(DB_RETIRO);
-    }).obtenerProductosSalida();
+    });
   }
 
 function filtrar() {
@@ -365,12 +365,14 @@ function confirmar() {
   };
 
   // Ejecución en segundo plano
-  google.script.run
-    .withSuccessHandler(() => {
+  inventoryApi.registrarRetiro(d).then(() => {
        // Solo limpiamos y regresamos al terminar
        resetFormularioRetiro();
-    })
-    .registrarRetiro(d);
+    }).catch(err => {
+      mostrarError(err.message || String(err));
+      btn.disabled = false;
+      btn.innerHTML = 'CONFIRMAR SALIDA';
+    });
 }
 
 function resetFormularioRetiro() {

@@ -1,4 +1,4 @@
-# Local Testing (Mock de `google.script.run`)
+# Local Testing (Inventory API + Mock Adapter)
 
 ## Objetivo
 
@@ -6,23 +6,24 @@ Permitir pruebas de UI local sin entorno de Google Apps Script, evitando el erro
 
 `Uncaught ReferenceError: google is not defined`
 
-## Como se activa el mock
+## Como se elige el adapter
 
-El mock se activa **solo** cuando:
+La prioridad está documentada en **[API_ADAPTERS.md](./API_ADAPTERS.md)**. Resumen:
 
-- `file://...`
-- `http://localhost...` o `http://127.0.0.1...`
-- URL con `?mock=1`
-- host `*.github.io`
+1. Apps Script (`window.google.script.run`) → backend real en Sheets.
+2. `?mock=1` → mock forzado (demo).
+3. `window.__INVENTORY_API_BASE_URL__` → HTTP (backend futuro); en GitHub Pages permite **no** quedar atado al mock.
+4. Sin API configurada en `localhost`, `file:`, `*.github.io` → mock como fallback/demo.
 
-En Apps Script real (HTML Service), se usa `google.script.run` real y el mock **no** interfiere.
-Si `window.google?.script?.run` ya existe, el mock no se instala.
+El mock **no** sustituye a Apps Script cuando la app corre dentro de HtmlService.
 
-## Archivos
+## Archivos relevantes
 
-- `src/dev/googleScriptRunMock.ts`
-- `src/dev/installGoogleScriptRunMock.ts`
-- `src/dev/mockRuntime.js` (runtime directo para navegador local)
+- `src/api/inventoryApi.global.js`
+- `src/api/createInventoryApi.ts`
+- `src/api/adapters/appsScriptAdapter.ts`
+- `src/api/adapters/mockAdapter.ts`
+- `src/api/adapters/httpAdapter.ts`
 - `src/dev/fixtures/products.fixture.ts`
 - `src/dev/fixtures/movements.fixture.ts`
 - `src/dev/fixtures/history.fixture.ts`
@@ -52,8 +53,10 @@ Las funciones de escritura muestran `console.warn` indicando que no escriben en 
 
 ## Flujo recomendado de prueba (GitHub Pages)
 
-1. Abrir la URL publicada con mock:
+1. Abrir la URL publicada (mock explícito opcional):
    - `https://NicolasNeg.github.io/Inventory_/?mock=1`
+
+   También funcionará sin `mock=1` en `*.github.io` usando mock como fallback **si no** definiste `window.__INVENTORY_API_BASE_URL__`.
 2. Confirmar en consola que no aparece `google is not defined`.
 3. Validar inventario:
    - carga de tabla,

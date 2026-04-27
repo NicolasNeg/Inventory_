@@ -186,12 +186,11 @@
   <script>
 window.addEventListener('load', function() {
     console.log("Iniciando carga de historial...");
-    google.script.run
-      .withSuccessHandler(dibujarHistorial)
-      .withFailureHandler(error => {
+    inventoryApi.obtenerHistorialCombinado()
+      .then(dibujarHistorial)
+      .catch(error => {
          document.getElementById('loader').innerHTML = "❌ Error: " + error.message;
-      })
-      .obtenerHistorialCombinado();
+      });
   });
 
 
@@ -208,8 +207,8 @@ function generarPDF() {
   btn.innerHTML = '<i class="material-icons left">sync</i> GENERANDO...';
 
   // LLAMADA AL SERVIDOR
-  google.script.run
-    .withSuccessHandler(base64Data => {
+  inventoryApi.exportarHistorialPDF()
+    .then(base64Data => {
       // Crear link de descarga invisible
       const link = document.createElement('a');
       link.href = base64Data;
@@ -226,12 +225,11 @@ function generarPDF() {
         M.toast({html: '✅ Reporte descargado con éxito', classes: 'green darken-2'});
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       btn.disabled = false;
       btn.innerHTML = '<i class="material-icons left">picture_as_pdf</i> Exportar PDF';
       alert("Error al generar PDF: " + err);
-    })
-    .exportarHistorialPDF(); // Esta es la función que movimos al .gs
+    });
 }
 
     function dibujarHistorial(datos) {
