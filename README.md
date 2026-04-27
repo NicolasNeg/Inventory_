@@ -41,6 +41,9 @@
 - Setup docs: `SUPABASE_MIGRATION_PLAN.md`
 - SQL scaffold: `supabase/schema.sql`
 - Env template: `.env.example`
+- Runtime mode:
+  - con `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` -> lectura real (read-only).
+  - sin env o con `?mock=1` -> fallback mock.
 
 ## Netlify
 

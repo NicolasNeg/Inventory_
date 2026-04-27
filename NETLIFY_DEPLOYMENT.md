@@ -45,6 +45,19 @@ Set these in Netlify site settings:
 Use `.env.example` as template. Never store real values in git.
 
 If variables are absent, app falls back to mock adapter and remains navigable (read-only demo mode).
+You can always force mock mode even with env vars by appending `?mock=1`.
+
+## Supabase Schema Setup
+
+- Apply `supabase/schema.sql` in Supabase SQL editor before enabling real reads.
+- Optional seed: `supabase/seed.sql`.
+
+## Read-Only Verification
+
+1. Deploy with `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`.
+2. Open React app entry (`react.html` in current Option B).
+3. Confirm Inventory page badge shows `Supabase`.
+4. Re-open with `?mock=1` and confirm badge switches to `Mock`.
 
 ## Preview Deploy
 
