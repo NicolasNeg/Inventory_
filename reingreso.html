@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root { 
+      --secondary: #0097a7; /* Color Cian para Re-ingresos */
+      --secondary-dark: #006064;
+      --bg: #f0f4f8;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    body { padding: 15px; background: var(--bg); font-family: 'Google Sans', Roboto, sans-serif; }
+    
+    .main-card { 
+      background: white; border-radius: 16px; padding: 20px; 
+      box-shadow: var(--card-shadow); max-width: 500px; margin: auto; min-height: 550px;
+    }
+.section-label { 
+  color: var(--secondary); 
+  font-weight: bold; 
+  font-size: 0.8rem; 
+  display: block; 
+  margin-top: 15px !important; /* Espacio arriba del label */
+  margin-bottom: 5px !important; 
+  text-transform: uppercase;
+  position: relative !important; /* Libera el label de la posición absoluta */
+  transform: none !important; /* Elimina cualquier traslación de Materialize */
+}
+    /* Buscador */
+    .search-wrapper { position: relative; margin-bottom: 15px; }
+    .search-wrapper i { position: absolute; left: 14px; top: 10px; color: var(--secondary); }
+    #inputBusqueda { 
+      padding-left: 45px !important; border: 1px solid #cfd8dc !important; 
+      border-radius: 24px !important; height: 44px; box-sizing: border-box;
+    }
+
+    /* Lista */
+    #listaProductos { max-height: 400px; overflow-y: auto; }
+    .mini-card {
+      display: flex; align-items: center; background: #fff; border: 1px solid #eceff1;
+      border-radius: 12px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;
+    }
+    .mini-card:hover { border-color: var(--secondary); background: #f1f8f9; }
+    .mini-card.selected { border: 2px solid var(--secondary); background-color: #e0f7fa; }
+
+    .info-prod { flex-grow: 1; }
+    .info-prod b { display: block; color: #263238; }
+    .info-prod span { font-size: 0.8rem; color: #546e7a; }
+
+    /* Formulario de Re-ingreso */
+    .btn-back { color: var(--secondary); cursor: pointer; display: flex; align-items: center; font-weight: 600; margin-bottom: 15px; }
+    
+    .stepper { 
+      display: flex; align-items: center; justify-content: space-between; 
+      background: #e0f2f1; border-radius: 25px; padding: 4px; width: 130px;
+    }
+    .stepper button { 
+      border: none; background: var(--secondary); color: white; border-radius: 50%; 
+      width: 32px; height: 32px; cursor: pointer;
+    }
+    .stepper input { border: none !important; width: 40px !important; text-align: center; margin: 0 !important; font-weight: bold; }
+
+    .btn-confirm { 
+      width: 100%; border-radius: 25px; height: 48px; font-weight: 600; 
+      background: var(--secondary) !important; margin-top: 20px;
+    }
+.input-field label.active {
+    transform: translateY(-14px) scale(0.8);
+    transform-origin: 0 0;
+  }
+select.browser-default {
+  border: 1px solid #cfd8dc !important;
+  border-radius: 8px !important;
+  background-color: #fafafa !important;
+  height: 45px !important;
+  display: block !important;
+  padding: 0 10px !important;
+}
+  .success-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+    z-index: 2000; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .custom-input {
+  border: 1px solid #cfd8dc !important;
+  border-radius: 8px !important;
+  padding: 0 12px !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  margin-bottom: 0 !important;
+}
+.custom-input, textarea.custom-input {
+  border: 1px solid #cfd8dc !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  display: block;
+  width: 100%;
+}
+  .checkmark {
+    width: 80px; height: 80px; border-radius: 50%; display: block;
+    stroke-width: 2; stroke: #0097a7; stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px #0097a7; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+  }
+    .label-reingreso { color: var(--secondary); font-weight: bold; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<div class="main-card">
+  <div id="seccionBusqueda">
+    <h5 style="color: var(--secondary); font-weight: bold; margin-top: 0;">⏪ Re-ingreso</h5>
+    <div class="search-wrapper">
+      <i class="material-icons">search</i>
+      <input type="text" id="inputBusqueda" placeholder="Buscar producto para devolver..." onkeyup="filtrar()">
+    </div>
+    <div id="listaProductos">
+      <div class="center-align" style="margin-top:20px; color:#90a4ae">Cargando inventario...</div>
+    </div>
+  </div>
+
+<div id="seccionForm" style="display:none;">
+  <div class="btn-back" onclick="regresar()">
+    <i class="material-icons">arrow_back</i> CANCELAR
+  </div>
+
+  <div id="cardReferencia"></div>
+
+  <div class="row" style="margin-top:15px">
+    <div class="col s6">
+      <label class="section-label">FECHA DEVOLUCIÓN</label>
+      <input type="date" id="fecha" class="custom-input">
+    </div>
+    <div class="col s6 center-align">
+      <label class="section-label">CANTIDAD</label>
+      <div class="stepper" style="margin: 5px auto 0;">
+        <button onclick="valStep(-1)"><i class="material-icons">remove</i></button>
+        <input type="number" id="qty" value="1" readonly>
+        <button onclick="valStep(1)"><i class="material-icons">add</i></button>
+      </div>
+    </div>
+  </div>
+
+  <label class="section-label">¿DE DÓNDE REGRESA?</label>
+  <input type="text" id="unidad" class="custom-input" placeholder="Ej: D4994 o Jaime o JOSUE">
+
+  <label class="section-label">MOTIVO DE RE-INGRESO</label>
+  <select id="notas" class="browser-default">
+    <option value="CANCELACIÓN DE TRABAJO">CANCELACIÓN DE TRABAJO</option>
+    <option value="ERROR DE DIAGNÓSTICO">ERROR DE DIAGNÓSTICO</option>
+    <option value="SOBRANTE DE INSTALACIÓN">SOBRANTE DE INSTALACIÓN</option>
+    <option value="GARANTÍA / DEFECTUOSO">GARANTÍA / DEFECTUOSO</option>
+    <option value="OTRO">OTRO</option>
+  </select>
+
+  <label class="section-label">RESPONSABLE QUE RECIBE</label>
+  <select id="autor" class="browser-default">
+    <option value="JORGE LUGO">JORGE LUGO</option>
+    <option value="OSVALDO SALAZAR">OSVALDO SALAZAR</option>
+    <option value="GERARDO SERVIN">GERARDO SERVIN</option>
+    <option value="ANGEL ARMENTA">ANGEL ARMENTA</option>
+  </select>
+
+  <button id="btnEjecutar" class="btn btn-confirm waves-effect waves-light" onclick="confirmar()">
+    CONFIRMAR RE-INGRESO
+  </button>
+</div>
+</div>
+<div id="successAnim" class="success-overlay">
+  <i class="material-icons" style="font-size: 80px; color: var(--secondary); animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">check_circle</i>
+  <h4 style="color: var(--secondary)">¡Re-ingreso Exitoso!</h4>
+  <p>El inventario ha sido actualizado.</p>
+</div>
+<script>
+  // 1. Usamos var y un nombre único para evitar el error de "redeclaration"
+  var DB_REINGRESO = []; 
+  var seleccionado = null;
+
+  // 2. Esta función es la que el index llamará automáticamente
+  function inicializarReingreso() {
+    console.log("Iniciando vista de Re-ingreso...");
+    
+    // Configuramos la fecha de hoy
+    const fechaInput = document.getElementById('fecha');
+    if(fechaInput) fechaInput.valueAsDate = new Date();
+
+    // Lógica de auto-selección desde el Inventario
+    if (window.productoSeleccionadoParaFormulario) {
+      console.log("Producto recibido desde Inventario");
+      seleccionarProducto(window.productoSeleccionadoParaFormulario);
+      
+      // Cargamos la base de datos de apoyo en silencio por si regresan a la lista
+      google.script.run.withSuccessHandler(data => { 
+        DB_REINGRESO = data; 
+      }).obtenerProductosReingreso();
+
+      // Limpiamos la variable global para no repetir el proceso por error
+      window.productoSeleccionadoParaFormulario = null; 
+    } else {
+      // Si el usuario entró por el menú lateral (Manual)
+      cargarInsumos();
+    }
+  }
+
+  function cargarInsumos() {
+    google.script.run.withSuccessHandler(data => {
+      DB_REINGRESO = data;
+      renderizarLista(DB_REINGRESO);
+    }).obtenerProductosReingreso();
+  }
+
+  function filtrar() {
+    const term = document.getElementById('inputBusqueda').value.toLowerCase().trim();
+    if (!term) {
+      renderizarLista(DB_REINGRESO);
+      return;
+    }
+    const filtrados = DB_REINGRESO.filter(p => 
+      (p.producto || "").toLowerCase().includes(term) || 
+      (p.marca || "").toLowerCase().includes(term) || 
+      (p.subModelo || "").toLowerCase().includes(term)
+    );
+    renderizarLista(filtrados);
+  }
+
+  function renderizarLista(lista) {
+    const cont = document.getElementById('listaProductos');
+    cont.innerHTML = '';
+    lista.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'mini-card';
+      div.innerHTML = `
+        <div class="info-prod">
+          <b>${p.producto}</b>
+          <span>${p.marca} | ${p.subModelo}</span>
+        </div>
+        <i class="material-icons" style="color:var(--secondary)">add_circle_outline</i>`;
+      div.onclick = () => seleccionarProducto(p);
+      cont.appendChild(div);
+    });
+  }
+
+  // Extraje esta lógica a su propia función para que sea reusable
+  function seleccionarProducto(p) {
+    seleccionado = p;
+    // Creamos la visual de la tarjeta seleccionada
+    document.getElementById('cardReferencia').innerHTML = `
+      <div class="mini-card selected">
+        <div class="info-prod">
+          <b>${p.producto}</b>
+          <span>${p.marca} | ${p.subModelo}</span>
+        </div>
+      </div>`;
+    document.getElementById('seccionBusqueda').style.display = 'none';
+    document.getElementById('seccionForm').style.display = 'block';
+    
+    // Foco automático en "De donde regresa" para rapidez
+    setTimeout(() => {
+      const inputUnidad = document.getElementById('unidad');
+      if(inputUnidad) inputUnidad.focus();
+    }, 400);
+  }
+
+  function regresar() {
+    seleccionado = null;
+    document.getElementById('seccionForm').style.display = 'none';
+    document.getElementById('seccionBusqueda').style.display = 'block';
+    // Siempre renderizar la base de datos de reingreso al volver
+    renderizarLista(DB_REINGRESO);
+  }
+
+  function valStep(n) {
+    const i = document.getElementById('qty');
+    let v = parseInt(i.value) + n;
+    if (v >= 1) i.value = v;
+  }
+
+  function confirmar() {
+    const btn = document.getElementById('btnEjecutar');
+    const unidad = document.getElementById('unidad').value.trim();
+    if (!unidad) { M.toast({html: 'Indica de dónde regresa el producto'}); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = `<span>PROCESANDO...</span>`;
+
+    const d = {
+      idFila: seleccionado.idFila,
+      cantidad: parseInt(document.getElementById('qty').value),
+      unidad: unidad,
+      autor: document.getElementById('autor').value,
+      notas: document.getElementById('notas').value,
+      producto: seleccionado.producto,
+      sub: seleccionado.subModelo,
+      marca: seleccionado.marca,
+      fecha: document.getElementById('fecha').value
+    };
+
+    google.script.run.withSuccessHandler(() => {
+      document.getElementById('successAnim').style.display = 'flex';
+      // En lugar de cerrar el host, regresamos al inventario después de 2 segundos
+      setTimeout(() => {
+        document.getElementById('successAnim').style.display = 'none';
+        // Si tienes una función para volver al inventario en el index, úsala aquí:
+        if(typeof cargarVista === 'function') cargarVista('inventario');
+      }, 2000);
+    }).registrarReingreso(d);
+  }
+
+  // IMPORTANTE: Llamada de respaldo por si se carga sola la página
+  inicializarReingreso();
+</script>
+</body>
+</html>

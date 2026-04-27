@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    /* Optimización de scroll y cabecera fija */
+    .search-box { 
+      padding: 15px 25px; 
+      background: #ffffff; 
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+      border-bottom: 2px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .tabla-scroll { 
+      height: calc(100vh - 130px); 
+      overflow-y: auto; 
+      padding: 0 20px; 
+      background: #f8fafc;
+    }
+    table { background: white; border-radius: 8px; overflow: hidden; margin-top: 15px; border-collapse: collapse; width: 100%; }
+    table thead { background: #f1f5f9; position: sticky; top: 0; z-index: 50; }
+    table thead th { color: #475569; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 15px; }
+    
+    /* Estilos de celdas */
+    .chip-salida { background: #fee2e2 !important; color: #ef4444 !important; font-weight: 700; padding: 0 12px; border-radius: 10px; }
+    .chip-entrada { background: #dcfce7 !important; color: #22c55e !important; font-weight: 700; padding: 0 12px; border-radius: 10px; }
+    .text-small { font-size: 0.8rem; color: #64748b; }
+    .nota-movimiento { font-style: italic; color: #1e293b; font-weight: 500; font-size: 0.9rem; }
+    .unidad-badge { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #1a73e8; }
+    
+    /* Loader personalizado */
+    .loading-overlay { display: flex; flex-direction: column; align-items: center; padding: 50px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <div class="search-box">
+    <div class="input-field shadow-sm" style="margin: 0;">
+      <i class="material-icons prefix" style="color: #1a73e8;">search</i>
+      <input type="text" id="inputBusqueda" onkeyup="filtrarMovimientos()" 
+             placeholder="Buscar por Unidad, Submodelo, Producto, Autor o Movimiento (Notas)...">
+    </div>
+  </div>
+
+  <div class="tabla-scroll">
+    <table class="highlight striped">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Producto / Submodelo</th>
+          <th>Unidad</th>
+          <th class="center">Cant.</th>
+          <th>Movimiento (Notas)</th>
+          <th>Autor</th>
+        </tr>
+      </thead>
+      <tbody id="tablaCuerpo">
+        <tr>
+          <td colspan="6" class="center">
+            <div class="loading-overlay" id="loaderMovimientos">
+              <div class="preloader-wrapper small active">
+                <div class="spinner-layer spinner-blue-only">
+                  <div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div>
+                </div>
+              </div>
+              <p style="margin-top:10px;">Sincronizando bitácora general...</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    /**
+     * Carga inicial de datos desde el servidor
+     */
+    window.cargarHistorialCompleto = function() {
+      console.log("Iniciando carga de movimientos ordenados...");
+      google.script.run
+        .withSuccessHandler(renderizarTabla)
+        .withFailureHandler(err => {
+          document.getElementById('tablaCuerpo').innerHTML = 
+            `<tr><td colspan="6" class="center red-text">Error al cargar: ${err.message}</td></tr>`;
+        })
+        .obtenerTodoElHistorico(); 
+    };
+
+    /**
+     * Dibuja las filas en la tabla
+     */
+    function renderizarTabla(data) {
+      const cuerpo = document.getElementById('tablaCuerpo');
+      
+      if (!data || data.length === 0) {
+        cuerpo.innerHTML = '<tr><td colspan="6" class="center">No se encontraron movimientos registrados.</td></tr>';
+        return;
+      }
+
+      // Generamos el HTML de las filas
+      cuerpo.innerHTML = data.map(m => `
+        <tr class="border-b hover:bg-slate-50">
+          <td class="text-small" style="font-weight:bold;">${m.fecha}</td>
+          <td>
+            <div style="font-weight:700; color: #334155;">${m.producto}</div>
+            <div class="text-small" style="color: #1a73e8;">${m.submodelo}</div>
+          </td>
+          <td><span class="unidad-badge">${m.unidad}</span></td>
+          <td class="center">
+            <span class="chip ${m.cantidad < 0 ? 'chip-salida' : 'chip-entrada'}">
+              ${m.cantidad}
+            </span>
+          </td>
+          <td class="nota-movimiento">${m.notas || '---'}</td>
+          <td class="text-small"><b>${m.autor}</b></td>
+        </tr>
+      `).join('');
+    }
+
+    /**
+     * Filtro interno (Buscador)
+     */
+    function filtrarMovimientos() {
+      const input = document.getElementById("inputBusqueda");
+      const filtro = input.value.toLowerCase();
+      const filas = document.querySelectorAll("#tablaCuerpo tr");
+
+      filas.forEach(fila => {
+        // No ocultar si es el mensaje de carga o de error
+        if (fila.innerText.includes("Sincronizando") || fila.cells.length < 2) return;
+        
+        const textoFila = fila.textContent.toLowerCase();
+        fila.style.display = textoFila.includes(filtro) ? "" : "none";
+      });
+    }
+
+    // Disparar carga de datos inmediatamente
+    cargarHistorialCompleto();
+  </script>
+</body>
+</html>

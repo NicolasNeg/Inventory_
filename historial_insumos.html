@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --mex-navy: #0f172a;
+      --mex-blue: #1a73e8;
+      --mex-bg: #f8fafc;
+      --mex-border: #e2e8f0;
+      --mex-text: #1e293b;
+    }
+
+    body { 
+      background-color: var(--mex-bg); 
+      font-family: 'Poppins', sans-serif; 
+      padding: 0; 
+      color: var(--mex-text);
+    }
+
+    /* --- HEADER CORPORATIVO --- */
+    .header-main {
+      background: var(--mex-navy);
+      color: white;
+      padding: 30px 20px 10px 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .header-main h5 { margin: 0; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; }
+    
+    /* --- BUSCADOR --- */
+    .search-container {
+      margin-top: 20px;
+      padding-bottom: 15px;
+      position: relative;
+    }
+    .search-input {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 8px !important;
+      color: white !important;
+      padding-left: 45px !important;
+      width: calc(100% - 45px) !important;
+      height: 45px !important;
+      transition: 0.3s;
+    }
+    .search-input:focus {
+      background: rgba(255, 255, 255, 0.15) !important;
+      border: 1px solid var(--mex-blue) !important;
+      box-shadow: none !important;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* --- TARJETA REGISTRO INICIAL --- */
+    .container-log { padding: 20px 20px 40px; }
+    
+    .card-original { 
+      background: white; 
+      border-radius: 4px; 
+      margin-bottom: 25px; 
+      border: 1px solid var(--mex-border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 20px;
+      position: relative;
+      border-left: 5px solid var(--mex-blue);
+      transition: 0.3s;
+    }
+    
+    /* Animación para cuando se ocultan por búsqueda */
+    .hidden-card { display: none; }
+
+    .meta-header { 
+      font-size: 0.75rem; 
+      color: #64748b; 
+      text-transform: uppercase; 
+      font-weight: 700; 
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .title-prod { font-size: 1.3rem; font-weight: 700; color: var(--mex-navy); margin: 0; line-height: 1.2; }
+    .brand-model { color: #475569; font-weight: 400; margin: 4px 0 15px; font-size: 0.95rem; }
+    
+    .stats-row { display: flex; gap: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+    .stat-box { background: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--mex-border); }
+    .stat-label { font-size: 0.65rem; color: #64748b; display: block; font-weight: 700; }
+    .stat-value { font-size: 0.9rem; font-weight: 700; color: var(--mex-navy); }
+
+    .btn-toggle { 
+      cursor: pointer; 
+      background: #f1f5f9;
+      color: var(--mex-blue); 
+      display: flex; 
+      align-items: center; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      margin-top: 15px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: 0.2s;
+    }
+    .btn-toggle:hover { background: #e2e8f0; }
+
+    .attached-container { 
+      display: none; 
+      margin-top: 0; 
+      padding-left: 30px; 
+      background: linear-gradient(to bottom, transparent 0%, #f1f5f9 100%);
+      padding-bottom: 10px;
+    }
+
+    .card-add { 
+      background: white; 
+      border-radius: 0; 
+      padding: 15px; 
+      margin-bottom: 2px; 
+      border-bottom: 1px solid var(--mex-border);
+      position: relative;
+      border-left: 2px solid #cbd5e1;
+    }
+
+    .card-add::before {
+      content: ""; 
+      position: absolute; 
+      left: -15px; 
+      top: 50%; 
+      width: 15px;
+      height: 1px;
+      background: #cbd5e1;
+    }
+    
+    .badge-qty { 
+      background: #dcfce7; 
+      color: #166534; 
+      padding: 2px 8px; 
+      border-radius: 4px; 
+      font-size: 0.75rem; 
+      font-weight: 700;
+    }
+
+    #loader { text-align: center; margin-top: 150px; }
+  </style>
+</head>
+
+<body>
+
+  <div class="header-main">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <h5 style="margin: 0;"><i class="material-icons" style="margin-right:12px; font-size:2rem; vertical-align: middle;">analytics</i>Auditoría de Inventario</h5>
+    
+    <button onclick="generarPDF()" class="btn waves-effect waves-light blue darken-4" style="border-radius:24px; text-transform:none; height: 36px; line-height: 36px; padding: 0 15px; font-size: 0.85rem;">
+      <i class="material-icons left" style="margin-right: 8px; font-size: 1.2rem;">picture_as_pdf</i>Exportar PDF
+    </button>
+  </div>
+  
+  <div class="search-container" style="margin-top: 15px;">
+    <i class="material-icons search-icon">search</i>
+    <input type="text" id="searchInput" class="search-input" placeholder="Buscar por producto, marca, modelo o autor..." onkeyup="filtrarHistorial()">
+  </div>
+</div>
+
+  <div id="loader">
+    <div class="preloader-wrapper active">
+      <div class="spinner-layer spinner-blue-only">
+        <div class="circle-clipper left"><div class="circle"></div></div>
+        <div class="gap-patch"><div class="circle"></div></div>
+        <div class="circle-clipper right"><div class="circle"></div></div>
+      </div>
+    </div>
+    <p style="color: #64748b; font-weight: 600; margin-top: 15px;">Accediendo a la base de datos...</p>
+  </div>
+
+  <div class="container-log" id="contenido"></div>
+
+  <script>
+window.addEventListener('load', function() {
+    console.log("Iniciando carga de historial...");
+    google.script.run
+      .withSuccessHandler(dibujarHistorial)
+      .withFailureHandler(error => {
+         document.getElementById('loader').innerHTML = "❌ Error: " + error.message;
+      })
+      .obtenerHistorialCombinado();
+  });
+
+
+
+// ESTO SE QUEDA EN EL HTML
+function generarPDF() {
+  const btn = event.currentTarget; // Capturamos el botón para efectos visuales
+  
+  if (typeof M !== 'undefined') {
+    M.toast({html: '⏳ Generando documento PDF...', classes: 'blue darken-3'});
+  }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<i class="material-icons left">sync</i> GENERANDO...';
+
+  // LLAMADA AL SERVIDOR
+  google.script.run
+    .withSuccessHandler(base64Data => {
+      // Crear link de descarga invisible
+      const link = document.createElement('a');
+      link.href = base64Data;
+      link.download = "Reporte_Auditoria_MEX.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Restaurar botón
+      btn.disabled = false;
+      btn.innerHTML = '<i class="material-icons left">picture_as_pdf</i> Exportar PDF';
+      
+      if (typeof M !== 'undefined') {
+        M.toast({html: '✅ Reporte descargado con éxito', classes: 'green darken-2'});
+      }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="material-icons left">picture_as_pdf</i> Exportar PDF';
+      alert("Error al generar PDF: " + err);
+    })
+    .exportarHistorialPDF(); // Esta es la función que movimos al .gs
+}
+
+    function dibujarHistorial(datos) {
+  document.getElementById('loader').style.display = 'none';
+  const container = document.getElementById('contenido');
+  container.innerHTML = ''; // Limpiar antes de dibujar
+
+  datos.forEach((item, index) => {
+    let reabHTML = '';
+    
+    // Verificamos si hay reabastecimientos vinculados
+    if (item.reabastecimientos && item.reabastecimientos.length > 0) {
+      reabHTML = `
+        <div class="btn-toggle" onclick="toggleReab(${index})">
+          <i class="material-icons" id="icon_${index}" style="margin-right:8px; font-size:1.2rem;">history</i> 
+          MOSTRAR ${item.reabastecimientos.length} CARGAS ADICIONALES
+        </div>
+        <div class="attached-container" id="reab_${index}" style="display:none;">
+          ${item.reabastecimientos.map(r => `
+            <div class="card-add">
+              <div class="meta-header">
+                <span>📅 ${r.fecha}</span>
+                <span>👤 ${r.autor}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.9rem; font-weight:600;">Carga: <span class="badge-qty">+${r.cantAgregada}</span></div>
+                <div style="font-size:0.8rem; color:#64748b;">${r.cantInicial} ➔ ${r.cantFinal}</div>
+              </div>
+              <div style="font-size:0.8rem; color:#475569; margin-top:8px; background:#f8fafc; padding:8px; border:1px solid #f1f5f9; border-radius:4px;">
+                <strong>Nota:</strong> ${r.notas || 'Sin comentarios'}
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    const card = `
+      <div class="card-original" data-search="${item.producto} ${item.marca} ${item.autor}">
+        <div class="meta-header">
+          <span>ID: ${item.clave.split('|')[0]}</span>
+          <span>📅 ${item.fecha} | 👤 ${item.autor}</span>
+        </div>
+        <p class="title-prod">${item.producto}</p>
+        <p class="brand-model">${item.marca} — ${item.subModelo}</p>
+        
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-label">REGISTRO INICIAL</span>
+            <span class="stat-value">${item.stockInicial} pzas</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">ALERTA MÍNIMA</span>
+            <span class="stat-value">${item.stockMinimo} pzas</span>
+          </div>
+        </div>
+        ${reabHTML}
+      </div>`;
+    container.innerHTML += card;
+  });
+}
+    function filtrarHistorial() {
+      const input = document.getElementById('searchInput');
+      const filter = input.value.toLowerCase();
+      const cards = document.getElementsByClassName('card-original');
+
+      for (let i = 0; i < cards.length; i++) {
+        const textContent = cards[i].getAttribute('data-search').toLowerCase();
+        if (textContent.includes(filter)) {
+          cards[i].classList.remove('hidden-card');
+        } else {
+          cards[i].classList.add('hidden-card');
+        }
+      }
+    }
+
+   function toggleReab(id) {
+  const el = document.getElementById(`reab_${id}`);
+  const btn = document.getElementById(`icon_${id}`).parentElement; // Acceso directo al botón
+  
+  // Si no tiene estilo definido aún, lo detectamos como oculto
+  if (el.style.display === 'block') {
+    el.style.display = 'none';
+    btn.innerHTML = btn.innerHTML.replace('OCULTAR', 'MOSTRAR');
+  } else {
+    el.style.display = 'block';
+    btn.innerHTML = btn.innerHTML.replace('MOSTRAR', 'OCULTAR');
+  }
+}
+  </script>
+</body>
+</html>

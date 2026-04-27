@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --mex-navy: #0f172a;
+      --mex-blue: #1a73e8;
+      --mex-bg: #f8fafc;
+      --mex-border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    body { 
+      background-color: var(--mex-bg); 
+      font-family: 'Inter', sans-serif; 
+      padding: 20px; 
+      color: var(--text-main);
+    }
+
+    .container-form {
+      max-width: 550px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      border: 1px solid var(--mex-border);
+    }
+
+    /* --- HEADER --- */
+    .form-header {
+      background: var(--mex-navy);
+      padding: 30px;
+      color: white;
+      text-align: left;
+    }
+    .form-header h5 { 
+      margin: 0; 
+      font-weight: 700; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px;
+      letter-spacing: -0.5px;
+    }
+    .form-header p { 
+      margin: 8px 0 0; 
+      font-size: 0.85rem; 
+      opacity: 0.7; 
+      font-weight: 400; 
+    }
+
+    .form-body { padding: 30px; }
+
+    /* --- ESTILOS DE INPUTS --- */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--mex-blue);
+      margin-bottom: 8px;
+      display: block;
+      letter-spacing: 0.5px;
+    }
+
+    .browser-default {
+      width: 100%;
+      height: 48px;
+      background-color: #fcfcfc;
+      border: 1px solid var(--mex-border);
+      border-radius: 10px;
+      padding: 0 15px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      transition: all 0.3s ease;
+      outline: none;
+      margin-bottom: 20px;
+    }
+    .browser-default:focus {
+      border-color: var(--mex-blue);
+      background-color: #fff;
+      box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+    }
+
+    input[type=text]:not(.browser-default), 
+    input[type=number]:not(.browser-default) {
+      height: 48px !important;
+      background-color: #fcfcfc !important;
+      border: 1px solid var(--mex-border) !important;
+      border-radius: 10px !important;
+      padding: 0 15px !important;
+      box-sizing: border-box !important;
+      font-size: 1rem !important;
+      margin-bottom: 20px !important;
+      transition: all 0.3s ease !important;
+    }
+    input:focus:not(.browser-default) {
+      border-bottom: 1px solid var(--mex-blue) !important;
+      box-shadow: 0 1px 0 0 var(--mex-blue) !important;
+      background-color: #fff !important;
+    }
+
+    /* --- COMPATIBILIDAD CHIPS --- */
+    .autos-wrapper {
+      background: #f8fafc;
+      border: 1px solid var(--mex-border);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 25px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .auto-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      background: white;
+      border: 1px solid var(--mex-border);
+      border-radius: 8px;
+      margin: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .auto-chip:hover { border-color: var(--mex-blue); color: var(--mex-blue); }
+    .auto-chip.selected {
+      background: var(--mex-blue);
+      color: white;
+      border-color: var(--mex-blue);
+      box-shadow: 0 4px 6px -1px rgba(26, 115, 232, 0.3);
+    }
+
+    /* --- ESTADOS --- */
+    .disabled-field { 
+      opacity: 0.4; 
+      pointer-events: none; 
+      filter: grayscale(1);
+      transition: all 0.4s ease;
+    }
+
+    .btn-save {
+      width: 100%;
+      height: 55px;
+      background: var(--mex-navy) !important;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+    .btn-save:hover {
+      background: #1e293b !important;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    #msgError { 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      margin-bottom: 15px; 
+      display: none; 
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .row-flex { display: flex; gap: 15px; }
+    .col-flex { flex: 1; }
+  </style>
+</head>
+<body>
+
+<div class="container-form">
+  <div class="form-header">
+    <h5><i class="material-icons">inventory_2</i> NUEVO INSUMO</h5>
+    <p>Complete la información técnica para el alta en el inventario maestro.</p>
+  </div>
+
+  <div class="form-body">
+    <span class="section-label">Responsable del Registro</span>
+    <select id="autor" class="browser-default" onchange="verificarDesbloqueo()">
+      <option value="" disabled selected>Seleccione colaborador...</option>
+      <option value="ANGEL ARMENTA">ANGEL ARMENTA</option>
+      <option value="JORGE LUGO">JORGE LUGO</option>
+      <option value="OSVALDO SALAZAR">OSVALDO SALAZAR</option>
+      <option value="GERARDO SERVIN">GERARDO SERVIN</option>
+      <option value="ULISES TORRES">ULISES TORRES</option>
+    </select>
+
+    <span class="section-label">Categoría del Producto</span>
+    <select id="tipo" class="browser-default" onchange="verificarDesbloqueo()">
+  <option value="" disabled selected>Seleccione categoría técnica...</option>
+</select>
+
+    <div id="bloqueCampos" class="disabled-field">
+      <span class="section-label">Información General</span>
+      <input id="producto" type="text" placeholder="Ej. Filtro de Aceite Sintético">
+
+      <div class="row-flex">
+        <div class="col-flex">
+          <span class="section-label">Marca</span>
+          <input id="marca" type="text" placeholder="Ej. Fram">
+        </div>
+        <div class="col-flex">
+          <span class="section-label">Modelo / Medida</span>
+          <input id="subModelo" type="text" placeholder="Ej. PH-3614">
+        </div>
+      </div>
+
+      <span class="section-label">Compatibilidad por Unidad</span>
+<div class="search-box-models" style="position: relative; margin-bottom: 10px;">
+  <i class="material-icons" style="position: absolute; left: 10px; top: 12px; color: var(--text-muted); font-size: 1.2rem;">search</i>
+  <input type="text" id="busquedaModelos" placeholder="Buscar modelo (Ej. Versa)..." 
+         style="padding-left: 40px !important; margin-bottom: 5px !important;" onkeyup="filtrarModelos()">
+</div>
+
+<div id="autosGrid" class="autos-wrapper">
+  </div>
+
+<div id="btnNuevoModeloContainer" style="display:none; margin-bottom: 20px;">
+  <button type="button" class="btn-flat" onclick="crearNuevoModelo()" 
+          style="color: var(--mex-blue); font-weight: 700; text-transform: none; display: flex; align-items: center; gap: 5px;">
+    <i class="material-icons">add_circle_outline</i> No existe, crear: "<span id="txtNuevoModelo"></span>"
+  </button>
+</div>
+
+      <div class="row-flex">
+        <div class="col-flex">
+          <span class="section-label">Carga de Stock Inicial</span>
+          <input id="cantidad" type="number" value="0">
+        </div>
+        <div class="col-flex">
+          <span class="section-label">Nivel Crítico (Min)</span>
+          <input id="minStock" type="number" value="5">
+        </div>
+      </div>
+<span class="section-label">Periodo de Aplicación / Registro</span>
+<div class="row-flex">
+  <div class="col-flex">
+    <select id="mesPeriodo" class="browser-default">
+      <option value="ENERO">ENERO</option>
+      <option value="FEBRERO">FEBRERO</option>
+      <option value="MARZO">MARZO</option>
+      <option value="ABRIL">ABRIL</option>
+      <option value="MAYO">MAYO</option>
+      <option value="JUNIO">JUNIO</option>
+      <option value="JULIO">JULIO</option>
+      <option value="AGOSTO">AGOSTO</option>
+      <option value="SEPTIEMBRE">SEPTIEMBRE</option>
+      <option value="OCTUBRE">OCTUBRE</option>
+      <option value="NOVIEMBRE">NOVIEMBRE</option>
+      <option value="DICIEMBRE">DICIEMBRE</option>
+    </select>
+  </div>
+  <div class="col-flex">
+    <select id="anioPeriodo" class="browser-default">
+      </select>
+  </div>
+</div>
+      <div id="msgError"></div>
+
+      <button id="btnEnviar" class="btn btn-save waves-effect waves-light" onclick="enviar()">
+        <i class="material-icons">save</i> GUARDAR EN SISTEMA
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Variables globales de esta vista
+  let DB_MODELOS = [];
+  let autosSeleccionados = [];
+
+  // ESTA ES LA FUNCIÓN QUE "DESPIERTA" TODO
+  function inicializarNuevoInsumo() {
+  // Llenar selector de años dinámicamente
+  const anioSel = document.getElementById('anioPeriodo');
+  if (anioSel) {
+    const anioActual = new Date().getFullYear();
+    for(let i = anioActual + 1; i >= anioActual - 3; i--) {
+      let o = document.createElement('option');
+      o.value = i; o.text = i;
+      if(i === anioActual) o.selected = true;
+      anioSel.add(o);
+    }
+  }
+
+  // Cargar mes actual automáticamente
+  const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  const mesSel = document.getElementById('mesPeriodo');
+  if (mesSel) {
+    mesSel.value = meses[new Date().getMonth()];
+  }
+  // 1. Llamada al GS para obtener las categorías
+  google.script.run.withSuccessHandler(cats => {
+  const sel = document.getElementById('tipo');
+  sel.innerHTML = '<option value="" disabled selected>Seleccione categoría técnica...</option>';
+  
+  if (cats && cats.length > 0) {
+    cats.forEach(c => { 
+      let o = document.createElement('option'); 
+      o.value = c; 
+      o.text = c; 
+      sel.add(o); 
+    });
+    console.log("Categorías cargadas: " + cats.length);
+  } else {
+    console.warn("No se recibieron categorías del servidor.");
+  }
+
+  // Si usas 'browser-default' en el HTML, ESTA LÍNEA DEBE COMENTARSE:
+  // M.FormSelect.init(sel); 
+}).obtenerCategoriasParaSelect();
+
+  // 2. Cargar los modelos de autos (Chips)
+  if (typeof cargarModelos === 'function') cargarModelos();
+}
+
+function verificarDesbloqueo() {
+    const autor = document.getElementById('autor').value;
+    const tipo = document.getElementById('tipo').value;
+    const bloque = document.getElementById('bloqueCampos');
+    
+    // Si ambos selectores tienen valor, quitamos la clase que bloquea el formulario
+    if(autor && tipo) {
+      bloque.classList.remove('disabled-field');
+    }
+  }
+
+  function filtrarModelos() {
+    const busqueda = document.getElementById('busquedaModelos').value.toUpperCase().trim();
+    const filtrados = DB_MODELOS.filter(m => m.includes(busqueda));
+    const btnContainer = document.getElementById('btnNuevoModeloContainer');
+    const txtNuevo = document.getElementById('txtNuevoModelo');
+
+    renderizarChips(filtrados);
+
+    // Si no hay resultados y el usuario escribió algo, ofrecemos crear el modelo
+    if (filtrados.length === 0 && busqueda.length > 1) {
+      btnContainer.style.display = 'block';
+      txtNuevo.innerText = busqueda;
+    } else {
+      btnContainer.style.display = 'none';
+    }
+  }
+function crearNuevoModelo() {
+    const nuevo = document.getElementById('busquedaModelos').value.toUpperCase().trim();
+    if (!nuevo) return;
+
+    M.toast({html: '⏳ Registrando modelo...', classes: 'rounded blue'});
+    
+    google.script.run.withSuccessHandler(res => {
+      if (res.success) {
+        M.toast({html: '✅ Modelo añadido', classes: 'rounded green'});
+        DB_MODELOS.push(res.modelo);
+        autosSeleccionados.push(res.modelo);
+        document.getElementById('busquedaModelos').value = '';
+        document.getElementById('btnNuevoModeloContainer').style.display = 'none';
+        renderizarChips(DB_MODELOS.sort());
+      }
+    }).insertarNuevoModeloAuto(nuevo);
+  }
+
+function toggleAuto(elemento, valor) {
+    elemento.classList.toggle('selected');
+    if (elemento.classList.contains('selected')) {
+      autosSeleccionados.push(valor);
+    } else {
+      autosSeleccionados = autosSeleccionados.filter(a => a !== valor);
+    }
+  }
+
+
+
+  function cargarModelos() {
+    google.script.run.withSuccessHandler(listaAutos => {
+      DB_MODELOS = listaAutos.sort();
+      renderizarChips(DB_MODELOS);
+    }).obtenerAutosParaSelect();
+  }
+
+  function renderizarChips(lista) {
+    const grid = document.getElementById('autosGrid');
+    grid.innerHTML = '';
+    lista.forEach(auto => {
+      let div = document.createElement('div');
+      div.className = 'auto-chip' + (autosSeleccionados.includes(auto) ? ' selected' : '');
+      div.innerText = auto;
+      div.onclick = () => toggleAuto(div, auto);
+      grid.appendChild(div);
+    });
+  }
+
+  // ... (tus funciones filtrarModelos, crearNuevoModelo, toggleAuto, verificarDesbloqueo siguen igual) ...
+
+  function enviar() {
+    const btn = document.getElementById('btnEnviar');
+    const msg = document.getElementById('msgError');
+    
+   const d = {
+      autor: document.getElementById('autor').value,
+      tipo: document.getElementById('tipo').value,
+      producto: document.getElementById('producto').value,
+      marca: document.getElementById('marca').value.toUpperCase(),
+      subModelo: document.getElementById('subModelo').value,
+      autos: autosSeleccionados.join(','),
+      cantidad: document.getElementById('cantidad').value,
+      minStock: document.getElementById('minStock').value,
+      // NUEVO: Concatenamos mes y año
+      periodo: document.getElementById('mesPeriodo').value + " " + document.getElementById('anioPeriodo').value
+    };
+
+    if(!d.autor || !d.producto || !d.marca || !d.tipo) {
+      msg.style.display = 'block';
+      msg.style.backgroundColor = '#fee2e2';
+      msg.style.color = '#991b1b';
+      msg.innerHTML = '<i class="material-icons" style="vertical-align:bottom; font-size:1.2rem">error</i> Complete los campos obligatorios';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="material-icons">sync</i> GUARDANDO...';
+
+    google.script.run
+      .withSuccessHandler(() => {
+         msg.style.display = 'block';
+         msg.style.backgroundColor = '#dcfce7';
+         msg.style.color = '#166534';
+         msg.innerHTML = '<i class="material-icons" style="vertical-align:bottom; font-size:1.2rem">check_circle</i> ¡Insumo registrado con éxito!';
+         
+         setTimeout(() => {
+           const btnInv = document.querySelector('button[onclick*="inventario"]');
+           cargarVista('inventario', btnInv);
+         }, 1500);
+      })
+      .guardarProducto(d);
+  }
+</script>
+</body>
+</html>

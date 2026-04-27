@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body { padding: 15px; font-family: 'Google Sans', sans-serif; background-color: #f8f9fa; }
+    .header-title { color: #1b5e20; font-weight: bold; margin-bottom: 20px; font-size: 1.2rem; }
+    .card-opcion { 
+      padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; 
+      background: white; border: 1px solid #dadce0; margin-bottom: 10px;
+      display: flex; align-items: center;
+    }
+    .card-opcion:hover { background-color: #f1f8e9; border-color: #1b5e20; transform: translateX(5px); }
+    .card-opcion i { margin-right: 15px; font-size: 2rem; }
+    .card-opcion div { flex-grow: 1; }
+    .card-opcion b { display: block; font-size: 1rem; }
+    .card-opcion span { font-size: 0.8rem; color: #5f6368; }
+    
+    /* Overlay de carga */
+    #loader { display: none; text-align: center; margin-top: 50px; }
+  </style>
+</head>
+<body>
+  <div id="contenidoMenu">
+    <div class="header-title center-align">Centro de Impresión de Reportes</div>
+    
+    <div class="card-opcion" onclick="ejecutar('INVENTARIO')">
+      <i class="material-icons green-text">inventory_2</i>
+      <div><b>Inventario General</b><span>Columnas seleccionadas (Restringido)</span></div>
+    </div>
+
+    <div class="card-opcion" onclick="ejecutar('HISTORICO_ADD_PRIMERINSUMO')">
+      <i class="material-icons orange-text">fiber_new</i>
+      <div><b>Historial de Altas</b><span>Hojas de registros nuevos (Col A - G)</span></div>
+    </div>
+
+    <div class="card-opcion" onclick="ejecutar('ADD_INSUMOS')">
+      <i class="material-icons blue-text">post_add</i>
+      <div><b>Cargas de Stock</b><span>Historial de reabastecimiento (Col A - G)</span></div>
+    </div>
+
+    <div class="card-opcion" onclick="ejecutar('HISTORICO')">
+      <i class="material-icons red-text">history</i>
+      <div><b>Histórico de Salidas</b><span>Movimientos de retiro (Col A - I)</span></div>
+    </div>
+  </div>
+
+  <div id="loader">
+    <div class="preloader-wrapper big active">
+      <div class="spinner-layer spinner-green-only">
+        <div class="circle-clipper left"><div class="circle"></div></div>
+        <div class="gap-patch"><div class="circle"></div></div>
+        <div class="circle-clipper right"><div class="circle"></div></div>
+      </div>
+    </div>
+    <p style="color: #1b5e20; font-weight: bold;">Generando Vista Previa...</p>
+  </div>
+
+<script>
+  function ejecutar(tipo) {
+    // 1. Mostrar estado de carga
+    document.getElementById('contenidoMenu').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
+    
+    google.script.run
+      .withSuccessHandler(function(htmlString) {
+          // 2. Crear un Blob para que el navegador lo trate como un archivo real
+          // Esto soluciona problemas de bloqueos en navegadores modernos
+          var blob = new Blob([htmlString], {type: 'text/html'});
+          var url = URL.createObjectURL(blob);
+          
+          var win = window.open(url, "_blank");
+          
+          // Cerramos el selector
+          google.script.host.close();
+      })
+      .withFailureHandler(function(err) {
+          alert("Error: " + err.message);
+          google.script.host.close();
+      })
+      .generarReporteHTML(tipo);
+  }
+</script>
+</body>
+</html>

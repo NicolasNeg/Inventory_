@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root { 
+      --primary: #1a73e8; 
+      --primary-dark: #1557b0;
+      --danger: #d93025; 
+      --bg: #f1f3f4;
+      --card-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+    }
+    
+    body { 
+      padding: 15px; 
+      background: var(--bg); 
+      font-family: 'Google Sans', Roboto, Arial, sans-serif; 
+    }
+    
+    .main-card { 
+      background: white; 
+      border-radius: 16px; 
+      padding: 20px; 
+      box-shadow: var(--card-shadow); 
+      max-width: 500px; 
+      margin: auto;
+      min-height: 550px;
+    }
+
+    /* Buscador Moderno */
+    .search-box { 
+      position: sticky; top: 0; background: white; z-index: 10;
+      padding-bottom: 15px; margin-bottom: 10px;
+    }
+    .search-wrapper { position: relative; }
+    .search-wrapper i { position: absolute; left: 14px; top: 10px; color: #5f6368; }
+    #inputBusqueda { 
+      padding-left: 45px !important; 
+      border: 1px solid #dfe1e5 !important; 
+      border-radius: 24px !important; 
+      height: 44px; 
+      box-sizing: border-box;
+      transition: all 0.2s;
+    }
+    #inputBusqueda:focus { 
+      border-color: var(--primary) !important; 
+      box-shadow: 0 1px 6px rgba(32,33,36,0.28) !important;
+    }
+
+    /* Lista de Productos */
+    #listaProductos { max-height: 450px; overflow-y: auto; padding: 5px; scrollbar-width: thin; }
+    
+    .mini-card {
+      display: flex; align-items: center;
+      background: #fff; border: 1px solid #dadce0; border-radius: 12px;
+      padding: 16px; margin-bottom: 12px; cursor: pointer; transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .mini-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--primary); }
+    .mini-card.selected { background-color: #e8f0fe; border: 2px solid var(--primary); }
+    
+    .info-prod { flex-grow: 1; }
+    .info-prod b { display: block; font-size: 1rem; color: #202124; line-height: 1.2; margin-bottom: 4px; }
+    .info-prod span { font-size: 0.75rem; color: #70757a; font-weight: 500; }
+    
+    .badge-stock { 
+      display: inline-block; margin-top: 8px; padding: 4px 12px; 
+      border-radius: 20px; background: #e6f4ea; color: #137333; font-weight: 600; font-size: 0.7rem;
+    }
+    .low-stock { background: #fce8e6; color: #c5221f; }
+
+    /* Estilo del Formulario de Retiro */
+    .btn-back { color: var(--primary); cursor: pointer; display: flex; align-items: center; font-weight: 600; margin-bottom: 20px; }
+    
+    .stepper { 
+      display: flex; align-items: center; justify-content: space-between; 
+      background: #f8f9fa; border-radius: 25px; padding: 4px; width: 130px; border: 1px solid #dadce0;
+    }
+    .stepper button { 
+      border: none; background: var(--primary); color: white; border-radius: 50%; 
+      width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .stepper input { border: none !important; width: 40px !important; text-align: center; margin: 0 !important; font-weight: bold; font-size: 1.1rem; }
+
+    .unit-input { 
+      background: #fff !important; 
+      border: 2px solid #dadce0 !important; 
+      border-radius: 8px !important; 
+      text-align: center; font-weight: bold; font-size: 1.2rem !important;
+      color: var(--primary);
+    }
+    .unit-input:focus { border-color: var(--primary) !important; }
+
+    .btn-confirm { 
+      width: 100%; border-radius: 25px; height: 48px; font-weight: 600; 
+      background: var(--danger) !important; margin-top: 20px; letter-spacing: 0.5px;
+      text-transform: none; font-size: 1rem;
+    }
+#listaProductos .mini-card {
+  animation: fadeIn 0.4s ease-out;
+}
+.right.sync {
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+    /* Skeleton Loading */
+    .skeleton { height: 80px; background: #eee; margin-bottom: 10px; border-radius: 12px; opacity: 0.6; animation: blink 1.5s infinite; }
+    @keyframes blink { 50% { opacity: 0.3; } }
+  </style>
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<body>
+
+<div class="main-card">
+  <div id="seccionBusqueda">
+    <div class="search-box">
+      <div class="search-wrapper">
+        <i class="material-icons">search</i>
+        <input type="text" id="inputBusqueda" placeholder="¿Qué estás buscando?" onkeyup="filtrar()">
+      </div>
+    </div>
+    <div id="listaProductos">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
+
+  <div id="seccionRetiro" style="display:none;">
+    <div class="btn-back" onclick="regresar()">
+      <i class="material-icons">chevron_left</i> VOLVER AL INVENTARIO
+    </div>
+
+    <div id="cardReferencia"></div>
+
+    <div id="areaRetiro">
+      <div class="row" style="margin-top:20px">
+        <div class="col s6">
+          <label style="font-weight:bold">FECHA</label>
+          <input type="date" id="fecha" style="border: 1px solid #dadce0; border-radius: 8px; padding: 0 10px; height: 40px; box-sizing: border-box;">
+        </div>
+        <div class="col s6 center-align">
+          <label style="font-weight:bold">CANTIDAD</label>
+          <div class="stepper" style="margin-top:5px">
+            <button onclick="valStep(-1)"><i class="material-icons">remove</i></button>
+            <input type="number" id="qty" value="1" readonly>
+            <button onclick="valStep(1)"><i class="material-icons">add</i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-field">
+        <input type="text" id="unidad" class="unit-input" placeholder="Ej: D4994 o UNIDAD 05">
+        <label class="active">UNIDAD / DESTINO</label>
+      </div>
+
+      <div class="row">
+        <div class="col s12">
+          <label style="font-weight:bold">AUTORIZA</label>
+          <select id="autor" class="browser-default" style="border-radius:8px; border:1px solid #dadce0; height: 45px; background: #f8f9fa;">
+            <option value="JORGE LUGO">JORGE LUGO</option>
+            <option value="OSVALDO SALAZAR">OSVALDO SALAZAR</option>
+            <option value="GERARDO SERVIN">GERARDO SERVIN</option>
+            <option value="ANGEL ARMENTA">ANGEL ARMENTA</option>
+            <option value="ULISES TORRES">ULISES TORRES</option>
+            <option value="JOSUE POSADA">JOSUE POSADA</option>
+          </select>
+        </div>
+      </div>
+
+      <textarea id="notas" class="materialize-textarea" placeholder="Notas o comentarios..." style="border: 1px solid #dadce0; border-radius: 8px; padding: 10px; min-height: 60px;"></textarea>
+      
+      <div id="msgError" style="color:var(--danger); font-size:0.9rem; text-align:center; display:none; margin-top:10px; font-weight:600;"></div>
+
+      <button id="btnEjecutar" class="btn btn-confirm waves-effect waves-light" onclick="confirmar()">
+        CONFIRMAR SALIDA
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+var DB_RETIRO = [];
+  var seleccionado = null;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    M.AutoInit();
+  });
+
+// Dentro de retiro.html
+function inicializarRetiro() {
+    console.log("Iniciando retiro...");
+    
+    // Configuramos la fecha
+    const fechaInput = document.getElementById('fecha');
+    if(fechaInput) fechaInput.valueAsDate = new Date();
+
+    // Prioridad: Si venimos desde el Inventario
+    if (window.productoSeleccionadoParaFormulario) {
+      console.log("Producto detectado de Inventario");
+      seleccionarProducto(window.productoSeleccionadoParaFormulario);
+      
+      // Cargamos la base de datos de apoyo en silencio
+      google.script.run.withSuccessHandler(data => { 
+        DB_RETIRO = data; 
+      }).obtenerProductosSalida();
+
+      window.productoSeleccionadoParaFormulario = null; 
+    } else {
+      // Si entramos directo
+      cargarInsumos();
+    }
+  }
+
+function cargarInsumos() {
+    google.script.run.withSuccessHandler(data => {
+      DB_RETIRO = data;
+      renderizarLista(DB_RETIRO);
+    }).obtenerProductosSalida();
+  }
+
+function filtrar() {
+  const term = document.getElementById('inputBusqueda').value.toLowerCase().trim();
+  
+  const filtrados = DB_RETIRO.filter(p => {
+    // Concatenamos todos los campos para buscar en una sola cadena
+    const contenidoBusqueda = `
+      ${p.producto} 
+      ${p.marca} 
+      ${p.subModelo || ''} 
+      ${p.tipo || ''}
+    `.toLowerCase();
+    
+    return contenidoBusqueda.includes(term);
+  });
+  
+  renderizarLista(filtrados);
+}
+
+  function renderizarLista(lista) {
+    const contenedor = document.getElementById('listaProductos');
+    contenedor.innerHTML = '';
+    
+    if(lista.length === 0) {
+        contenedor.innerHTML = '<div class="center-align" style="margin-top:30px; color:#70757a">No se encontraron resultados</div>';
+        return;
+    }
+
+    lista.forEach(p => {
+      const isLow = p.disponible <= 2;
+      const div = document.createElement('div');
+      div.className = 'mini-card';
+      
+      div.innerHTML = `
+        <div class="info-prod">
+          <b>${p.producto}</b>
+          <span>${p.marca} • ${p.subModelo}</span>
+          <div>
+            <span class="badge-stock ${isLow ? 'low-stock' : ''}">
+              ${isLow ? '⚠️ ÚLTIMAS ' + p.disponible : 'STOCK: ' + p.disponible} PZAS
+            </span>
+          </div>
+        </div>
+        <div style="color:var(--primary)"><i class="material-icons">keyboard_arrow_right</i></div>
+      `;
+      
+      div.onclick = () => seleccionarProducto(p);
+      contenedor.appendChild(div);
+    });
+  }
+
+
+  function seleccionarProducto(p) {
+    seleccionado = p;
+    const isLow = p.disponible <= 2;
+    document.getElementById('cardReferencia').innerHTML = `
+      <div class="mini-card selected" style="border-left: 8px solid var(--primary);">
+        <div class="info-prod">
+          <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase">Producto Seleccionado</span>
+          <b>${p.producto}</b>
+          <span>${p.marca} | ${p.subModelo}</span>
+          <div class="badge-stock ${isLow ? 'low-stock' : ''}">DISPONIBLE: ${p.disponible}</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('seccionBusqueda').style.display = 'none';
+    document.getElementById('seccionRetiro').style.display = 'block';
+    document.getElementById('qty').value = 1;
+    document.getElementById('unidad').value = "";
+    
+    // Foco automático en el destino para ahorrar tiempo
+    setTimeout(() => {
+      const inputUnidad = document.getElementById('unidad');
+      inputUnidad.focus();
+    }, 400);
+  }
+
+function regresar() {
+    seleccionado = null;
+    document.getElementById('seccionRetiro').style.display = 'none';
+    document.getElementById('seccionBusqueda').style.display = 'block';
+    // Si la DB está vacía (porque entramos directo), la cargamos al regresar
+    if (DB_RETIRO.length === 0) cargarInsumos();
+    else renderizarLista(DB_RETIRO);
+  }
+
+  function valStep(n) {
+    const i = document.getElementById('qty');
+    let v = parseInt(i.value) + n;
+    if (v >= 1 && v <= seleccionado.disponible) i.value = v;
+  }
+
+  
+function confirmar() {
+  const btn = document.getElementById('btnEjecutar');
+  const unidad = document.getElementById('unidad').value.trim();
+  const qty = parseInt(document.getElementById('qty').value);
+
+  if (!unidad) { 
+    mostrarError("Escribe el destino/unidad"); 
+    return; 
+  }
+
+  // --- DISPARO INMEDIATO DE ÉXITO ---
+  try {
+    if (typeof M !== 'undefined') {
+      M.toast({
+        html: '<span>✅ Registro enviado...</span>', 
+        classes: 'rounded green darken-2',
+        displayLength: 2000
+      });
+    }
+  } catch(e) { console.log("Error visual", e); }
+  
+  // Cambiar estado del botón
+  btn.disabled = true;
+  btn.innerHTML = '<i class="material-icons right sync">sync</i> PROCESANDO...';
+
+  const d = {
+    fila: seleccionado.idFila,
+    cantidad: qty,
+    unidad: unidad,
+    autor: document.getElementById('autor').value,
+    notas: document.getElementById('notas').value,
+    tipo: seleccionado.tipo,
+    producto: seleccionado.producto,
+    sub: seleccionado.subModelo,
+    marca: seleccionado.marca,
+    fecha: document.getElementById('fecha').value
+  };
+
+  // Ejecución en segundo plano
+  google.script.run
+    .withSuccessHandler(() => {
+       // Solo limpiamos y regresamos al terminar
+       resetFormularioRetiro();
+    })
+    .registrarRetiro(d);
+}
+
+function resetFormularioRetiro() {
+  // Limpiar campos
+  document.getElementById('unidad').value = "";
+  document.getElementById('notas').value = "";
+  document.getElementById('qty').value = 1;
+  
+  const btn = document.getElementById('btnEjecutar');
+  btn.disabled = false;
+  btn.innerHTML = "CONFIRMAR SALIDA";
+  
+  // Limpiar selección
+  seleccionado = null;
+  
+  // Regresar a la pantalla de inventario (o lista de búsqueda)
+  regresar(); 
+  
+  // Refrescar la lista visual con los nuevos stocks
+  renderizarLista(DB_RETIRO);
+}
+
+  function mostrarError(txt) {
+    const msg = document.getElementById('msgError');
+    msg.innerText = "⚠️ " + txt;
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  }
+
+  inicializarRetiro();
+</script>
+</body>
+</html>

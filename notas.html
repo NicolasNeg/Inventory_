@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --mex-blue: #003366;
+      --mex-light: #0055a4;
+      --mex-accent: #2e7d32;
+      --pending: #d32f2f;
+      --border: #e2e8f0;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; padding: 0; color: #1e293b; }
+    
+    /* --- HEADER --- */
+    .app-header {
+      background: var(--mex-blue); color: white; padding: 15px 25px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+    }
+
+    .container { max-width: 800px; margin: 25px auto; padding: 0 20px; }
+
+    /* --- CUSTOM SEARCH SELECT --- */
+    .search-container { position: relative; width: 100%; margin-bottom: 18px; }
+    .search-input-wrapper {
+      display: flex; align-items: center; background: white; 
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 2px 12px;
+      transition: all 0.3s;
+    }
+    .search-input-wrapper:focus-within { border-color: var(--mex-light); box-shadow: 0 0 0 3px rgba(0,85,164,0.1); }
+    
+    .search-input-wrapper input {
+      border: none; width: 100%; padding: 10px; outline: none; font-family: inherit;
+    }
+
+    .options-dropdown {
+      position: absolute; top: 105%; left: 0; width: 100%; max-height: 200px;
+      background: white; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      overflow-y: auto; z-index: 50; display: none; border: 1px solid var(--border);
+    }
+    .option-item {
+      padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem; transition: background 0.2s;
+    }
+    .option-item:hover { background: #f1f5f9; color: var(--mex-light); font-weight: 500; }
+
+    /* --- BOTONES Y ANIMACIONES --- */
+    .btn {
+      border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .btn-save { background: var(--mex-blue); color: white; width: 100%; justify-content: center; }
+    .btn-save:hover { background: var(--mex-light); transform: translateY(-1px); }
+    .btn-save:disabled { background: #94a3b8; transform: none; cursor: not-allowed; }
+
+    /* --- CARDS --- */
+    .card-nota {
+      background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px;
+      border-left: 6px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      animation: slideIn 0.3s ease-out backwards;
+    }
+    .card-nota.PENDIENTE { border-left-color: var(--pending); animation: pulseRed 2s infinite; }
+
+    @keyframes pulseRed {
+      0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.1); }
+      70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+    }
+
+    /* --- MODALES --- */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-content {
+      background: white; padding: 30px; border-radius: 16px; width: 450px;
+      animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .input-field {
+      width: 100%; padding: 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; margin-bottom: 15px; font-family: inherit; box-sizing: border-box;
+    }
+
+    .loader {
+      width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toggle-mode {
+      background: #f1f5f9; padding: 8px 15px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700; color: #64748b; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+    .toggle-mode.active { background: var(--mex-blue); color: white; }
+
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div style="display:flex; align-items:center; gap:10px">
+      <i class="material-icons">sticky_note_2</i>
+      <h2 style="margin:0; font-size:1.1rem; text-transform:uppercase">MEX <span style="font-weight:300">| Insumos</span></h2>
+    </div>
+    <div style="display:flex; gap:10px">
+      <button class="btn" style="background:white; color:var(--mex-blue)" onclick="abrirModal()">+ NUEVA NOTA</button>
+      <button class="btn" style="background:rgba(255,255,255,0.1); color:white" onclick="imprimirReporte()">
+        <i class="material-icons">print</i>
+      </button>
+    </div>
+  </header>
+
+  <div class="container" id="contenedorNotas"></div>
+
+  <div id="modalNota" class="modal">
+    <div class="modal-content">
+      <h3 id="tituloModal" style="margin-top:0; color:var(--mex-blue)">Crear Anotación</h3>
+      
+      <div id="btnModo" class="toggle-mode" onclick="toggleNotaExterna()">
+        <i class="material-icons" style="font-size:16px">inventory_2</i>
+        <span id="txtModo">VINCULAR A PRODUCTO</span>
+      </div>
+
+      <div id="areaProducto" class="search-container">
+  <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">BUSCAR PRODUCTO</label>
+  <div class="search-input-wrapper">
+    <i class="material-icons" style="color:#94a3b8">search</i>
+    <input type="text" 
+           id="busquedaProd" 
+           placeholder="Escribe o selecciona un producto..." 
+           onkeyup="filtrarProductos()" 
+           onclick="mostrarTodoAlClick()" 
+           onfocus="mostrarTodoAlClick()"
+           autocomplete="off">
+  </div>
+  <div id="listaOpciones" class="options-dropdown"></div>
+</div>
+      <div id="areaTitulo" style="display:none">
+        <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">ASUNTO / TÍTULO</label>
+        <input type="text" id="inputTitulo" class="input-field" placeholder="Ej: Error en facturación o Limpieza Almacén">
+      </div>
+
+      <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">QUIÉN REGISTRA</label>
+      <select id="autor" class="input-field">
+        <option value="" disabled selected>Selecciona un nombre...</option>
+        <option>ANGEL ARMENTA</option>
+        <option>JORGE LUGO</option>
+        <option>OSVALDO SALAZAR</option>
+        <option>GERARDO SERVIN</option>
+        <option>ULISES TORRES</option>
+      </select>
+
+      <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">DESCRIPCIÓN</label>
+      <textarea id="mensaje" class="input-field" rows="3" placeholder="Detalles de la nota..."></textarea>
+
+      <button id="btnGuardar" class="btn btn-save" onclick="guardarNota()">
+        <span id="btnTxt">PUBLICAR NOTA</span>
+        <div id="btnLoad" class="loader"></div>
+      </button>
+      
+      <button class="btn" style="width:100%; justify-content:center; margin-top:8px; color:#94a3b8; background:none" onclick="cerrarModales()">Cancelar</button>
+    </div>
+  </div>
+  <div id="modalResolver" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:var(--mex-blue)">Finalizar Nota</h3>
+      <p style="font-size:13px; color:#64748b; margin-top:0;">Autoriza la resolución del caso.</p>
+      
+      <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">ADMINISTRADOR</label>
+      <select id="authAdmin" class="input-field">
+        <option value="" disabled selected>Cargando administradores...</option>
+      </select>
+
+
+      <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:5px">COMENTARIO DE RESOLUCIÓN</label>
+      <textarea id="authComentario" class="input-field" rows="2" placeholder="Ej: Se ajustó el inventario, unidad reparada..."></textarea>
+
+      <button id="btnResolver" class="btn btn-save" onclick="ejecutarResolucion()">
+        <span id="txtBtnResolver">AUTORIZAR Y FINALIZAR</span>
+      </button>
+      
+      <button class="btn" style="width:100%; justify-content:center; margin-top:8px; color:#94a3b8; background:none" onclick="cerrarModales()">Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+    console.log("Iniciando carga de vista de notas...");
+    
+    // Ejecución inmediata de carga
+    cargarNotas();
+
+    // Cargar productos para el buscador del modal
+    google.script.run.withSuccessHandler(res => {
+      productosRaw = res;
+    }).obtenerListaProductosSimplificada();
+
+    // Lógica para abrir desde la campana del inventario
+    // Usamos un intervalo corto para asegurar que el contenedor ya existe en el DOM
+    let intentos = 0;
+    const revisarPendiente = setInterval(() => {
+      if (window.notaPendientePorAbrir) {
+        console.log("Redirección detectada para fila:", window.notaPendientePorAbrir);
+        abrirResolver(window.notaPendientePorAbrir);
+        window.notaPendientePorAbrir = null;
+        clearInterval(revisarPendiente);
+      }
+      if (intentos > 10) clearInterval(revisarPendiente);
+      intentos++;
+    }, 500);
+  })();
+let productosRaw = [];
+  let idProductoSeleccionado = null; // Columna A (ID_ORDEN)
+  let productoSeleccionado = null;   // Columna C (Nombre)
+  let esExterna = false;
+
+window.onload = () => {
+    cargarNotas();
+    
+    // Traemos la lista de productos para el buscador
+    google.script.run.withSuccessHandler(res => {
+      productosRaw = res;
+    }).obtenerListaProductosSimplificada();
+
+    // ¡EL TRUCO! Revisamos si venimos redirigidos desde el Inventario
+    setTimeout(() => {
+      if (window.notaPendientePorAbrir) {
+        console.log("Abriendo resolución automática para fila:", window.notaPendientePorAbrir);
+        abrirResolver(window.notaPendientePorAbrir);
+        
+        // Limpiamos la variable para que no se abra de nuevo al recargar
+        window.notaPendientePorAbrir = null;
+      }
+    }, 800); // Pequeño retraso para dar tiempo a que carguen las notas
+};
+
+function mostrarDatosEnPantalla(nota) {
+  document.getElementById('tituloVisualizar').innerText = nota.unidad;
+  document.getElementById('cuerpoNota').innerText = nota.nota;
+  document.getElementById('autorNota').innerText = "Registrada por: " + nota.autor;
+}
+
+    function toggleNotaExterna() {
+      esExterna = !esExterna;
+      const btn = document.getElementById('btnModo');
+      const areaProd = document.getElementById('areaProducto');
+      const areaTitu = document.getElementById('areaTitulo');
+      const txtModo = document.getElementById('txtModo');
+
+      if(esExterna) {
+        btn.classList.add('active');
+        areaProd.style.display = 'none';
+        areaTitu.style.display = 'block';
+        txtModo.innerText = "NOTA EXTERNA (GENERAL)";
+        btn.querySelector('i').innerText = "public";
+        productoSeleccionado = "";
+      } else {
+        btn.classList.remove('active');
+        areaProd.style.display = 'block';
+        areaTitu.style.display = 'none';
+        txtModo.innerText = "VINCULAR A PRODUCTO";
+        btn.querySelector('i').innerText = "inventory_2";
+      }
+    }
+function filtrarProductos() {
+    const query = document.getElementById('busquedaProd').value.toLowerCase().trim();
+    if (query === "") {
+      renderizarListaFiltrada(productosRaw);
+      return;
+    }
+    const filtrados = productosRaw.filter(p => p.nombre.toLowerCase().includes(query));
+    renderizarListaFiltrada(filtrados);
+  }
+
+// 4. Cerrar la lista si se hace clic fuera del buscador
+document.addEventListener('click', function(event) {
+  const areaProd = document.getElementById('areaProducto');
+  const lista = document.getElementById('listaOpciones');
+  if (!areaProd.contains(event.target)) {
+    lista.style.display = 'none';
+  }
+});
+
+    function seleccionarProd(nombre) {
+productoSeleccionado = p.producto; 
+  idProductoSeleccionado = p.idOrden;
+      document.getElementById('busquedaProd').value = nombre;
+      document.getElementById('listaOpciones').style.display = 'none';
+    }
+
+    function cargarNotas() {
+      document.getElementById('contenedorNotas').innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px">Cargando...</p>';
+      google.script.run.withSuccessHandler(renderizarNotas).obtenerNotasHistorial();
+    }
+
+    
+function renderizarListaFiltrada(arreglo) {
+    const lista = document.getElementById('listaOpciones');
+    if (arreglo.length > 0) {
+      // IMPORTANTE: Pasamos el índice del arreglo para recuperar el objeto completo después
+      lista.innerHTML = arreglo.map((p, index) => `
+        <div class="option-item" onclick="confirmarSeleccion(${index}, '${arreglo === productosRaw ? 'raw' : 'filt'}')">
+          <i class="material-icons" style="font-size:14px; margin-right:8px; color:#cbd5e1">inventory_2</i>
+          ${p.nombre}
+        </div>
+      `).join('');
+      lista.style.display = 'block';
+    } else {
+      lista.innerHTML = '<div class="option-item" style="color:#94a3b8; cursor:default">No se encontraron resultados</div>';
+      lista.style.display = 'block';
+    }
+  }
+ function renderizarNotas(notas) {
+  const container = document.getElementById('contenedorNotas');
+  
+  container.innerHTML = notas.map((n, i) => `
+    <div class="card-nota ${n.estado}" style="animation-delay: ${i*0.05}s">
+      
+      <div style="display:flex; justify-content:space-between">
+        <span style="font-weight:700; color:var(--mex-blue); font-size:0.85rem">${n.unidad}</span>
+        <span style="font-size:0.6rem; font-weight:800; color:${n.estado === 'RESUELTO' ? '#166534' : '#d32f2f'}">${n.estado}</span>
+      </div>
+      
+      <p style="margin:12px 0; font-size:0.95rem">${n.nota}</p>
+      
+      <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between">
+         <span><i class="material-icons" style="font-size:10px">person</i> Registró: ${n.autor}</span>
+         <span>${n.fecha}</span>
+      </div>
+
+      ${n.estado === 'PENDIENTE' 
+        ? `<button class="btn" style="background:var(--mex-blue); color:white; font-size:0.75rem; margin-top:12px; padding:8px 15px" onclick="abrirResolver(${n.idFila})">FINALIZAR</button>` 
+        : `
+          <div style="margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+               <span style="font-size: 0.65rem; color: #166534; font-weight: 800; text-transform: uppercase;">
+                 ✅ RESUELTO POR: ${n.autorRes}
+               </span>
+               <span style="font-size: 0.65rem; color: #15803d; font-weight: 600;">
+                 ${n.fechaRes}
+               </span>
+             </div>
+             <div style="font-size: 0.85rem; color: #15803d; font-style: italic;">
+               "${n.solucion}"
+             </div>
+          </div>
+          `
+      }
+    </div>
+  `).join('');
+}
+
+function guardarNota() {
+    const d = {
+      autor: document.getElementById('autor').value,
+      unidad: esExterna ? document.getElementById('inputTitulo').value : productoSeleccionado, 
+      nota: document.getElementById('mensaje').value,
+      idOrden: esExterna ? null : idProductoSeleccionado 
+    };
+
+    if(!d.autor || !d.unidad || !d.nota) return alert("Por favor completa todos los campos.");
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true;
+    document.getElementById('btnTxt').innerText = "GUARDANDO...";
+    document.getElementById('btnLoad').style.display = "block";
+
+    google.script.run.withSuccessHandler(() => {
+      btn.disabled = false;
+      document.getElementById('btnTxt').innerText = "PUBLICAR NOTA";
+      document.getElementById('btnLoad').style.display = "none";
+      cerrarModales();
+      cargarNotas();
+      resetCampos();
+    }).crearNuevaNota(d);
+  }
+
+
+function resetCampos() {
+    document.getElementById('busquedaProd').value = "";
+    document.getElementById('inputTitulo').value = "";
+    document.getElementById('mensaje').value = "";
+    document.getElementById('autor').value = "";
+    idProductoSeleccionado = null;
+    productoSeleccionado = null;
+  }
+function mostrarTodoAlClick() {
+    const input = document.getElementById('busquedaProd');
+    if (input.value.trim() === "") {
+      renderizarListaFiltrada(productosRaw);
+    } else {
+      filtrarProductos();
+    }
+  }
+    function abrirModal() { document.getElementById('modalNota').style.display='flex'; }
+    function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+
+ const ADMINS_FIJOS = [
+    "ANGEL ARMENTA", 
+    "JORGE LUGO", 
+    "OSVALDO SALAZAR", 
+    "GERARDO SERVIN", 
+    "ULISES TORRES"
+  ];
+
+  function abrirResolver(fila) {
+    idFilaPendiente = fila;
+    document.getElementById('modalResolver').style.display = 'flex';
+    
+    const selectAdmin = document.getElementById('authAdmin');
+    
+    // Llenamos la lista directamente al instante, sin esperar al servidor
+    selectAdmin.innerHTML = '<option value="" disabled selected>Selecciona tu usuario...</option>' + 
+                            ADMINS_FIJOS.map(a => `<option value="${a}">${a}</option>`).join('');
+  }
+
+function ejecutarResolucion() {
+    const admin = document.getElementById('authAdmin').value;
+    const comentario = document.getElementById('authComentario').value;
+
+    // 1. Validamos que no falten datos (ya no pedimos contraseña)
+    if (!admin || !comentario) return alert("Selecciona tu nombre y añade el comentario de resolución.");
+
+    const btn = document.getElementById('btnResolver');
+    btn.disabled = true;
+    document.getElementById('txtBtnResolver').innerText = "RESOLVIENDO...";
+
+    // 2. Armamos el objeto exactamente como lo espera tu función de Apps Script
+    const datos = {
+      idFila: idFilaPendiente,
+      autorRes: admin,
+      solucion: comentario
+    };
+
+    // 3. Enviamos los datos al servidor
+    google.script.run
+      .withSuccessHandler(res => {
+        btn.disabled = false;
+        document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
+        
+        // Tu función gs devuelve { success: true }
+        if (res && res.success === true) {
+          cerrarModales();
+          cargarNotas(); // Recarga la lista para quitar la que acabamos de resolver
+          document.getElementById('authComentario').value = ""; // Limpiamos la caja de texto
+        } else {
+          alert("Hubo un problema al resolver la nota. Intenta de nuevo.");
+        }
+      })
+      .withFailureHandler(err => {
+        btn.disabled = false;
+        document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
+        alert("Error de conexión: " + err.message);
+      })
+      .resolverNota(datos); // Mandamos el objeto 'datos' a tu función resolverNota(d)
+  }
+
+    function imprimirReporte() {
+      google.script.run.withSuccessHandler(html => {
+        var win = window.open();
+        win.document.write(html);
+      }).generarReporteHTML('HISTORIAL_NOTAS_PENDIENTES');
+    }
+
+    function confirmarSeleccion(index, tipo) {
+    const query = document.getElementById('busquedaProd').value.toLowerCase().trim();
+    let p;
+    
+    if (tipo === 'raw' || query === "") {
+      p = productosRaw[index];
+    } else {
+      const filtrados = productosRaw.filter(prod => prod.nombre.toLowerCase().includes(query));
+      p = filtrados[index];
+    }
+
+    // Guardamos los datos globales
+    productoSeleccionado = p.nombre; 
+    idProductoSeleccionado = p.idOrden; 
+
+    // Actualizamos la UI
+    document.getElementById('busquedaProd').value = p.nombre;
+    document.getElementById('listaOpciones').style.display = 'none';
+    
+    console.log("Seleccionado:", idProductoSeleccionado);
+  }
+
+  </script>
+</body>
+</html>

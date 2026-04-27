@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --mex-blue: #1a73e8;
+      --mex-navy: #0f172a;
+      --mex-bg: #f8fafc;
+      --mex-red: #ef4444;
+    }
+
+    body { 
+      background-color: var(--mex-bg); 
+      padding: 0; 
+      font-family: 'Poppins', sans-serif;
+      color: var(--mex-navy);
+    }
+
+    .header-historial { 
+      background: var(--mex-blue); 
+      color: white; 
+      padding: 25px 20px; 
+      border-radius: 0 0 25px 25px; 
+      box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-historial h6 { font-weight: 600; margin: 0; font-size: 1.2rem; }
+    .header-historial small { opacity: 0.8; font-weight: 300; letter-spacing: 0.5px; }
+
+    .btn-print {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 999;
+    }
+
+    #listaCards { padding: 15px; }
+
+    .card-movimiento { 
+      background: white; 
+      border-radius: 18px; 
+      padding: 18px; 
+      margin-bottom: 15px; 
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .badge-cantidad { 
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #fee2e2; 
+      color: var(--mex-red); 
+      padding: 4px 12px; 
+      border-radius: 10px; 
+      font-weight: 800; 
+      font-size: 0.8rem;
+    }
+
+    .id-unidad { display: flex; align-items: center; gap: 5px; color: var(--mex-blue); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+    .fecha { color: #64748b; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
+    .autor { background: #f1f5f9; padding: 6px 12px; border-radius: 8px; color: #475569; font-weight: 600; font-size: 0.8rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; }
+    .notas { margin-top: 12px; padding: 10px; border-radius: 10px; background: #fffbeb; border-left: 3px solid #f59e0b; font-size: 0.85rem; color: #92400e; font-style: italic; }
+
+    .loader-container { text-align: center; margin-top: 100px; }
+    .no-data { text-align: center; margin-top: 80px; color: #94a3b8; }
+
+    @media print {
+      body { background: white; }
+      .header-historial { 
+        background: white !important; 
+        color: black !important; 
+        box-shadow: none !important; 
+        border-bottom: 2px solid black;
+        border-radius: 0;
+      }
+      .btn-print, .loader-container { display: none !important; }
+      .card-movimiento { 
+        box-shadow: none !important; 
+        border: 1px solid #ccc !important; 
+        break-inside: avoid;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="btn-print" id="btn-print-container" style="display:none;">
+    <a class="btn-floating btn-large waves-effect waves-light blue" onclick="window.print()">
+      <i class="material-icons">print</i>
+    </a>
+  </div>
+
+  <div id="contenido">
+    <div class="header-historial">
+      <h6 id="nombreProd">Consultando...</h6>
+      <small id="subProd">Sincronizando bitácora</small>
+    </div>
+
+    <div id="listaCards">
+      <div class="loader-container" id="loading">
+        <div class="preloader-wrapper active">
+          <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left"><div class="circle"></div></div>
+            <div class="gap-patch"><div class="circle"></div></div>
+            <div class="circle-clipper right"><div class="circle"></div></div>
+          </div>
+        </div>
+        <p style="color:#64748b; margin-top:10px;">Buscando movimientos...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // 1. FUNCIÓN DE BÚSQUEDA
+  window.buscarHistorialPorId = function(subModelo) { 
+    console.log("Iniciando búsqueda para:", subModelo);
+    const loader = document.getElementById('loading');
+    if(loader) loader.style.display = 'block';
+    document.getElementById('listaCards').innerHTML = '';
+
+    google.script.run
+      .withSuccessHandler(mostrarHistorial)
+      .withFailureHandler(err => {
+         if(document.getElementById('loading')) document.getElementById('loading').style.display = 'none';
+         document.getElementById('listaCards').innerHTML = `<p class="center red-text">Error: ${err.message}</p>`;
+      })
+      .obtenerMovimientosPorId(subModelo); 
+  };
+
+  // 2. FUNCIÓN PARA MOSTRAR LOS DATOS
+  window.mostrarHistorial = function(data) {
+    console.log("Datos recibidos del servidor:", data);
+    const loader = document.getElementById('loading');
+    if (loader) loader.style.display = 'none';
+
+    if (!data || data.error) {
+      document.getElementById('listaCards').innerHTML = `
+        <div class="no-data text-red-500">
+          <i class="material-icons large">error</i>
+          <p>${data ? data.error : 'Error desconocido'}</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('nombreProd').innerText = data.producto || "Producto";
+    document.getElementById('subProd').innerText = data.sub || "Sin submodelo";
+
+    const contenedor = document.getElementById('listaCards');
+    
+    if (!data.movimientos || data.movimientos.length === 0) {
+      contenedor.innerHTML = `
+        <div class="no-data">
+          <i class="material-icons large">history_toggle_off</i>
+          <p>No se encontraron movimientos para: <b>${data.sub}</b></p>
+        </div>`;
+      return;
+    }
+
+    contenedor.innerHTML = data.movimientos.map(m => `
+      <div class="card-movimiento">
+        <div class="badge-cantidad">${m.cantidad > 0 ? '-' + m.cantidad : m.cantidad} PZAS</div>
+        <div class="id-unidad">
+          <i class="material-icons" style="font-size:18px">local_shipping</i> ${m.unidad}
+        </div>
+        <div class="fecha">
+          <i class="material-icons" style="font-size:14px">schedule</i> ${m.fecha}
+        </div>
+        <div class="autor">
+          <i class="material-icons" style="font-size:16px">account_circle</i> ${m.autor}
+        </div>
+        ${m.notas ? `<div class="notas">"${m.notas}"</div>` : ''}
+      </div>
+    `).join('');
+
+    const btnPrint = document.getElementById('btn-print-container');
+    if (btnPrint) btnPrint.style.display = 'block';
+  };
+
+  // 3. AUTO-EJECUCIÓN AL CARGAR (Solo si viene de la vista principal)
+  if (typeof subModeloPendiente !== 'undefined' && subModeloPendiente !== "") {
+    window.buscarHistorialPorId(subModeloPendiente);
+    subModeloPendiente = ""; 
+  }
+  </script>
+</body>
+</html>

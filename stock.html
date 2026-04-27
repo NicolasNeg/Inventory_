@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+    :root { --primary: #1a73e8; --bg: #f1f3f4; }
+    body { padding: 15px; background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+    
+    .main-card { 
+      background: white; border-radius: 16px; padding: 24px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 450px; margin: auto; 
+    }
+    
+    /* Buscador con estilo Google */
+    .search-wrapper { position: relative; margin-bottom: 15px; }
+    #inputBusqueda { 
+      padding-left: 45px !important; border: 1px solid #dadce0 !important; 
+      border-radius: 24px !important; height: 48px; box-sizing: border-box; 
+      transition: 0.2s; font-size: 1rem; background: #fff !important;
+    }
+    #inputBusqueda:focus { border-color: var(--primary) !important; box-shadow: 0 1px 6px rgba(32,33,36,0.28) !important; }
+    .search-wrapper i { position: absolute; left: 16px; top: 12px; color: #5f6368; }
+
+    /* Items de la lista */
+    .item-prod { 
+      display: flex; align-items: center; padding: 12px 16px; border: 1px solid #f1f3f4; 
+      margin-bottom: 8px; border-radius: 12px; cursor: pointer; transition: 0.2s; background: #fff;
+    }
+    .item-prod:hover { background: #f8f9fa; border-color: var(--primary); transform: translateY(-1px); }
+
+    /* Caja de Cantidad Pro */
+    .qty-box { 
+      background: #e8f0fe; padding: 15px; border-radius: 12px; 
+      text-align: center; border: 2px solid var(--primary); margin: 20px 0;
+    }
+    .qty-input { 
+      font-size: 2.8rem !important; font-weight: 900; color: var(--primary); 
+      text-align: center !important; border: none !important; width: 100% !important; 
+      background: transparent !important; margin: 0 !important; height: auto !important;
+    }
+    
+    .btn-add { 
+      width: 100%; height: 50px; border-radius: 25px; 
+      background: var(--primary) !important; font-weight: 600; 
+      text-transform: none; font-size: 1rem; margin-top: 10px;
+    }
+
+    .badge-info { 
+      background: #f1f3f4; color: #5f6368; padding: 4px 10px; 
+      border-radius: 6px; font-weight: bold; font-size: 0.7rem; 
+    }
+</style>
+</head>
+<body>
+
+<div class="main-card">
+  <h5 style="color: var(--primary); font-weight: 800; margin-top:0; display:flex; align-items:center; letter-spacing: -0.5px;">
+    <i class="material-icons" style="margin-right:12px; font-size:32px;">inventory_2</i> SURTIR STOCK
+  </h5>
+
+  <div id="busquedaSection">
+    <div class="search-wrapper">
+      <i class="material-icons">search</i>
+      <input type="text" id="inputBusqueda" placeholder="Buscar por nombre, marca o ID..." onkeyup="filtrar()">
+    </div>
+    <div id="listaProductos">
+      <div class="center-align grey-text" style="padding:40px">
+        <div class="preloader-wrapper small active">
+          <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div>
+          </div>
+        </div>
+        <br>Sincronizando inventario...
+      </div>
+    </div>
+  </div>
+
+  <div id="formEntrada">
+    <div id="cardReferencia"></div>
+
+    <div class="qty-box">
+      <label style="font-weight:800; color:#5f6368; font-size: 0.7rem; text-transform: uppercase;">Cantidad a Ingresar</label><br>
+      <input type="number" id="qtyIngreso" class="qty-input" value="1" min="1">
+    </div>
+
+    <div class="input-field">
+      <label class="active" style="color:var(--primary); font-weight:bold;">RESPONSABLE</label>
+      <select id="autor" class="browser-default" style="margin-top:5px;">
+        <option value="" disabled selected>Selecciona quién recibe...</option>
+        <option value="ANGEL ARMENTA">ANGEL ARMENTA</option>
+        <option value="JORGE LUGO">JORGE LUGO</option>
+        <option value="OSVALDO SALAZAR">OSVALDO SALAZAR</option>
+        <option value="GERARDO SERVIN">GERARDO SERVIN</option>
+        <option value="ULISES TORRES">ULISES TORRES</option>
+      </select>
+    </div>
+
+    <div class="input-field" style="margin-top:25px;">
+      <i class="material-icons prefix" style="color:var(--primary)">notes</i>
+      <textarea id="notas" class="materialize-textarea" placeholder="Notas adicionales (Proveedor, Lote, etc.)"></textarea>
+    </div>
+
+    <button class="btn btn-add waves-effect waves-light" onclick="procesarIngreso()">
+      <i class="material-icons left">add_moderator</i> CONFIRMAR CARGA
+    </button>
+    
+    <center><a href="javascript:void(0)" onclick="regresar()" style="display:block; margin-top:20px; color:#9aa0a6; font-weight:500;">Cancelar y volver</a></center>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  // 1. Nombre de variable único para evitar el SyntaxError de redeclaración
+  var DB_STOCK_ADD = []; 
+  var seleccionado = null;
+
+  // 2. Esta función es el corazón del arranque automático
+  function inicializarAgregarStock() {
+    console.log("Iniciando carga de stock...");
+    
+    // Inicializar componentes de Materialize (Selects)
+    if (typeof M !== 'undefined') M.AutoInit();
+
+    // Lógica de auto-selección desde el Inventario
+    if (window.productoSeleccionadoParaFormulario) {
+      console.log("Producto detectado de Inventario");
+      seleccionar(window.productoSeleccionadoParaFormulario);
+      
+      // Cargamos la DB en silencio por si deciden regresar a la lista
+      google.script.run.withSuccessHandler(data => { 
+        DB_STOCK_ADD = data; 
+      }).obtenerProductosParaAgregar();
+
+      window.productoSeleccionadoParaFormulario = null; 
+    } else {
+      // Entrada manual desde el Sidebar
+      cargarInsumos();
+    }
+  }
+
+  function cargarInsumos() {
+    google.script.run
+      .withSuccessHandler(data => { 
+        DB_STOCK_ADD = data; 
+        renderizarLista(DB_STOCK_ADD);
+      })
+      .obtenerProductosParaAgregar();
+  }
+
+  function renderizarLista(lista) {
+    const contenedor = document.getElementById('listaProductos');
+    contenedor.innerHTML = '';
+    
+    // Mostramos los primeros 30 para velocidad
+    const vistaPrevia = lista.slice(0, 30);
+
+    vistaPrevia.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'item-prod';
+      div.innerHTML = `
+        <div style="flex-grow:1">
+          <span style="font-size:1rem; font-weight:600; color:#202124; display:block; line-height:1.2;">${p.producto}</span>
+          <small class="grey-text">${p.marca} • ID: ${p.idOrden}</small>
+        </div>
+        <div class="badge-info">Disp: ${p.disponible}</div>
+      `;
+      div.onclick = () => seleccionar(p);
+      contenedor.appendChild(div);
+    });
+  }
+
+function filtrar() {
+  const term = document.getElementById('inputBusqueda').value.toLowerCase().trim();
+  if(!term) { renderizarLista(DB_STOCK_ADD); return; }
+  
+  const filtrados = DB_STOCK_ADD.filter(p => {
+    const busqueda = `${p.producto} ${p.marca} ${p.subModelo || p.sub || ''} ${p.idOrden || ''}`.toLowerCase();
+    return busqueda.includes(term);
+  });
+  renderizarLista(filtrados);
+}
+
+  function seleccionar(p) {
+    seleccionado = p;
+    document.getElementById('busquedaSection').style.display = 'none';
+    document.getElementById('formEntrada').style.display = 'block';
+    
+    document.getElementById('cardReferencia').innerHTML = `
+        <div class="item-prod" style="border-left: 5px solid var(--primary); cursor:default;">
+          <div style="flex-grow:1">
+            <b style="color:var(--primary)">${p.producto}</b><br>
+            <small>${p.marca} | Stock: ${p.disponible}</small>
+          </div>
+        </div>`;
+    
+    // Auto-seleccionar cantidad y poner foco
+    const inputQty = document.getElementById('qtyIngreso');
+    setTimeout(() => {
+      inputQty.focus();
+      inputQty.select();
+    }, 400);
+  }
+
+function regresar() {
+    seleccionado = null;
+    // Limpiar campos de texto
+    document.getElementById('qtyIngreso').value = 1;
+    document.getElementById('notas').value = "";
+    document.getElementById('autor').selectedIndex = 0; // Resetear select
+    
+    document.getElementById('formEntrada').style.display = 'none';
+    document.getElementById('busquedaSection').style.display = 'block';
+    
+    // Si tienes la función de renderizado para refrescar la lista
+    if(typeof renderizarLista === 'function') renderizarLista(DB_STOCK_ADD);
+  }
+
+  function procesarIngreso() {
+    const qty = document.getElementById('qtyIngreso').value;
+    const autor = document.getElementById('autor').value;
+    const btn = document.querySelector('.btn-add');
+
+    if(!qty || qty <= 0 || !autor) {
+      if (typeof M !== 'undefined') M.toast({html: '⚠️ Datos incompletos', classes: 'red'});
+      return;
+    }
+
+    // --- ANIMACIÓN INMEDIATA ---
+    if (typeof M !== 'undefined') {
+      M.toast({html: '✅ Guardando carga...', classes: 'rounded blue darken-2'});
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = 'REGISTRANDO...';
+
+    const d = {
+      fila: seleccionado.idFila,
+      producto: seleccionado.producto,
+      cantidad: parseInt(qty),
+      autor: autor,
+      notas: document.getElementById('notas').value.trim()
+    };
+
+    google.script.run
+      .withSuccessHandler(() => {
+         if(typeof cargarVista === 'function') cargarVista('inventario');
+      })
+      .agregarStock(d);
+} 
+
+  // Atajo de teclado: Enter en cantidad confirma
+  document.getElementById('qtyIngreso').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') procesarIngreso();
+  });
+
+  // Ejecución inmediata
+  inicializarAgregarStock();
+</script>
+</body>
+</html>

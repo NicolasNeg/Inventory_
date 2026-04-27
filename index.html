@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <style>
+    body { background:#f3f4f6; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    
+
+.menuBtn:not(.active-menu) {
+  background-color: transparent !important;
+  color: #cbd5e1 !important;
+}
+.fila-oculta {
+  display: none !important;
+}
+    /* Estructura del Sidebar */
+    #sidebar {
+      width: 260px;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 50;
+      background-color: #1e293b; /* slate-800 */
+    }
+
+    /* Clase para ocultar el menú sacándolo de la pantalla */
+    #sidebar.hidden-menu {
+      transform: translateX(-100%);
+    }
+
+    /* Contenedor principal de contenido */
+    .content {
+      margin-left: 260px;
+      width: calc(100% - 260px);
+      height: 100vh;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Cuando el menú está oculto, el contenido ocupa el 100% */
+    .content.full-width {
+      margin-left: 0;
+      width: 100%;
+    }
+#submenuMovimientos {
+  transition: all 0.3s ease;
+}
+
+#flechaMov {
+  transition: transform 0.3s ease;
+}
+
+/* Para que los sub-botones se vean un poco más pequeños y elegantes */
+.bg-slate-800\/50 {
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+    .menuBtn { 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+  padding: 12px 20px; 
+  width: 100%;
+  text-align: left;
+  color: #cbd5e1; /* Gris azulado claro */
+  transition: background 0.2s, border-color 0.2s;
+border-left: 4px solid transparent !important;
+  border-radius: 8px;
+  margin: 2px 0;
+  min-height: 48px;
+}
+
+/* Botón cuando pasas el mouse */
+.menuBtn:hover { 
+  background: #334155; 
+  color: white; 
+}
+.active-menu {
+  background-color: #334155 !important; /* Gris azulado oscuro del sidebar */
+  color: white !important;
+  border-left: 4px solid #ef4444 !important; /* Solo una línea roja discreta */
+}
+button[onclick*="inventario"]:not(.active-menu) {
+  background-color: transparent !important;
+  color: #cbd5e1 !important;
+  border-left: 4px solid transparent !important;
+}
+.active-menu span, .active-menu i {
+  color: white !important;
+}
+    
+    /* Animación de pulso para stock crítico */
+    @keyframes pulse-red {
+      0%, 100% { background-color: rgba(254, 226, 226, 1); }
+      50% { background-color: rgba(254, 202, 202, 1); }
+    }
+    .alerta-stock { animation: pulse-red 2s infinite; }
+
+    /* Botón Logo (MEX Insumos) */
+    .logo-btn {
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .logo-btn:hover { background: #334155; }
+
+.hidden { display: none; }
+
+/* Para que la fila de acciones se sienta integrada */
+#tablaInventario tr.bg-slate-100 {
+  transition: all 0.3s ease;
+}
+
+
+.faja-acciones {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #f8fafc; /* Un gris muy ligero para diferenciarlo */
+}
+
+/* Cuando está abierta */
+.faja-acciones.abierta {
+  max-height: 200px; /* Un valor lo suficientemente alto para cubrir los botones */
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Efecto de rotación para la fila seleccionada (opcional) */
+tr.seleccionada {
+  background-color: #f1f5f9 !important;
+}
+
+
+
+@media (max-width: 768px) {
+  /* El sidebar se oculta totalmente y flota sobre el contenido */
+  #sidebar {
+    position: fixed;
+    left: -260px; /* Escondido por defecto */
+    transition: 0.3s;
+    z-index: 999;
+  }
+    .mobile-card-style:active {
+    background-color: #f1f5f9;
+  }
+  #sidebar.hidden-menu {
+    left: 0; /* Se muestra al darle al botón */
+  }
+
+  /* El contenido ocupa todo el ancho en móvil siempre */
+  .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Tabla estilo "Card" para que no se vea apretada */
+  table, thead, tbody, th, td, tr { 
+    display: block; 
+  }
+  
+  thead tr { position: absolute; top: -9999px; left: -9999px; }
+  
+  tr { border: 1px solid #ccc; margin-bottom: 10px; border-radius: 8px; background: white; }
+  
+  td { 
+    border: none;
+    position: relative;
+    padding-left: 50% !important; 
+    text-align: right !important;
+  }
+  
+  td:before { 
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 45%; 
+    padding-right: 10px; 
+    white-space: nowrap;
+    font-weight: bold;
+    text-align: left;
+    content: attr(data-label); /* Necesitarás agregar data-label="Nombre" a tus <td> */
+  }
+}
+
+
+  </style>
+</head>
+
+<body class="flex overflow-hidden">
+
+  <div id="sidebar" class="text-white p-4 shadow-xl">
+    <div onclick="toggleSidebar()" class="logo-btn mb-6 flex items-center justify-between">
+      <h2 class="text-xl font-bold flex items-center gap-2">📦 <span>MEX Insumos</span></h2>
+      <i class="material-icons text-slate-400">first_page</i>
+    </div>
+
+    <nav class="space-y-1">
+  <button onclick="cargarVista('inventario', this)" class="menuBtn rounded-lg">
+    📊 <span class="text-sm font-medium">Inventario</span>
+  </button>
+  
+  <button onclick="cargarVista('nuevo', this)" class="menuBtn rounded-lg">
+    ➕ <span class="text-sm font-medium">Nuevo Insumo</span>
+  </button>
+
+  <div class="collapsible-container">
+    <button onclick="toggleMovimientos()" class="menuBtn rounded-lg flex items-center justify-between w-full">
+      <div class="flex items-center">
+        🔄 <span class="ml-2 text-sm font-medium">Movimientos</span>
+      </div>
+      <i class="material-icons text-xs" id="flechaMov">keyboard_arrow_down</i>
+    </button>
+    
+    <div id="submenuMovimientos" class="hidden pl-4 space-y-1 mt-1">
+      <button onclick="cargarVista('retiro', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
+        <span class="text-xs">🔴 Salida (Retiro)</span>
+      </button>
+      <button onclick="cargarVista('reingreso', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
+        <span class="text-xs">↩️ Re-ingreso</span>
+      </button>
+      <button onclick="cargarVista('stock', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
+        <span class="text-xs">♾️ Agregar Stock</span>
+      </button>
+    </div>
+  </div>
+
+  <button onclick="cargarVista('historialinsumos', this)" class="menuBtn rounded-lg">
+    📜 <span class="text-sm font-medium">Historial Cargas</span>
+  </button>
+  
+  <button onclick="cargarVista('historial_movimientos', this)" class="menuBtn rounded-lg">
+    🔄 <span class="text-sm font-medium">Log de Movs</span>
+  </button>
+  
+  <button onclick="cargarVista('notas', this)" class="menuBtn rounded-lg">
+    📝 <span class="text-sm font-medium">Notas y Alertas</span>
+  </button>
+  
+  <button onclick="cargarVista('reportes', this)" class="menuBtn rounded-lg">
+    🖨 <span class="text-sm font-medium">Reportes</span>
+  </button>
+</nav>
+  </div>
+
+  <div id="modalAlerta" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+  <div class="bg-white p-6 rounded-xl shadow-2xl w-80 border-t-4 border-amber-500">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-slate-700 flex items-center gap-2">
+        <i class="material-icons text-amber-500">warning</i> Pendiente
+      </h3>
+      <button onclick="cerrarAlerta()" class="text-slate-400 hover:text-slate-600"><i class="material-icons">close</i></button>
+    </div>
+    <div id="contenidoAlerta" class="text-sm text-slate-600 space-y-2">
+      </div>
+    <div id="footerAlerta" class="mt-6">
+      </div>
+  </div>
+</div>
+
+  <div class="content">
+
+    <div class="bg-white shadow-sm p-3 flex justify-between items-center border-b px-6">
+      <div class="flex items-center gap-4">
+        <button onclick="toggleSidebar()" class="p-2 rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+          <i class="material-icons">menu</i>
+        </button>
+        <span class="font-bold text-slate-700 text-sm tracking-widest uppercase">Sistema Inventario 2026</span>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+        <span class="text-[10px] font-bold text-slate-400">ONLINE</span>
+      </div>
+    </div>
+
+    <div id="vista" class="p-4 overflow-auto flex-grow"></div>
+  </div>
+
+<script>
+window.onload = () => {
+  // 1. Buscamos el botón de inventario específicamente por su acción
+  const btnInventario = document.querySelector('button[onclick*="inventario"]');
+  
+  // 2. Cargamos la vista inicial pasando el elemento para que se pinte correctamente
+  if (btnInventario) {
+    cargarVista('inventario', btnInventario);
+  } else {
+    // Si por algo no encuentra el botón, carga la vista sin marcar elemento
+    cargarVista('inventario');
+  }
+};
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const content = document.querySelector(".content");
+    sidebar.classList.toggle("hidden-menu");
+    content.classList.toggle("full-width");
+  }
+
+function cargarVista(nombreVista, elemento) {
+  // 1. Gestión de UI del Sidebar
+  const botones = document.querySelectorAll('.menuBtn');
+  botones.forEach(btn => {
+    btn.classList.remove('active-menu');
+    btn.style.backgroundColor = ""; 
+  });
+  if (elemento) elemento.classList.add('active-menu');
+
+  const vista = document.getElementById("vista");
+  vista.innerHTML = `<div class="flex justify-center items-center h-full"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>`;
+
+  // 2. Carga de contenido desde el servidor
+  google.script.run.withSuccessHandler(html => {
+    vista.innerHTML = html;
+
+    // 3. DESPERTAR SCRIPTS (Universal)
+    // Esto extrae los <script> del HTML cargado y los ejecuta en el contexto actual
+    const scripts = vista.getElementsByTagName("script");
+    for (let i = 0; i < scripts.length; i++) {
+      const nuevoScript = document.createElement("script");
+      nuevoScript.text = scripts[i].text;
+      document.body.appendChild(nuevoScript).parentNode.removeChild(nuevoScript);
+    }
+
+    // 4. AUTO-INICIALIZACIÓN
+    // Si la pestaña tiene una función inicializarX, se ejecuta sola.
+    if (nombreVista === 'nuevo' && typeof inicializarNuevoInsumo === 'function') {
+        inicializarNuevoInsumo();
+    }
+if (nombreVista === 'historialinsumos') {
+      console.log("Activando carga de datos del historial...");
+      google.script.run
+        .withSuccessHandler(dibujarHistorial) // Esta función vive en historialinsumos.html
+        .withFailureHandler(err => console.error("Error al cargar historial:", err))
+        .obtenerHistorialCombinado();
+    }
+    // Si es inventario, cargamos los datos inmediatamente
+    if (nombreVista === 'inventario') {
+        google.script.run.withSuccessHandler(renderTabla).obtenerProductos();
+    }
+
+  }).cargarVistaParcial(nombreVista);
+}
+
+function renderTabla(data) {
+  const tbody = document.getElementById("tablaInventario");
+  if (!tbody) return; 
+  
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="p-10 text-center text-gray-400">No hay productos.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(p => {
+    const tieneAlertaStock = String(p.reStockStatus).includes("PEDIR STOCK");
+    const tieneNotaPendiente = p.statusNota === "PENDIENTE"; 
+    const idNota = p.idNotaRelacionada;
+
+    // "p.autos" debe venir desde tu objeto de datos procesado en el GS
+    const unidadesCompatibles = p.autos ? p.autos : 'Universal / No especificado';
+
+    return `
+      <tr onclick="toggleAcciones(this, ${p.idFila})" 
+          class="${tieneAlertaStock ? 'bg-red-50' : 'border-b hover:bg-slate-50'} transition-colors cursor-pointer mobile-card-style">
+        
+        <td class="p-3 text-[10px] text-gray-400 font-bold uppercase hide-on-mobile border-r border-gray-50">${p.tipo}</td>
+        
+        <td class="p-3">
+          <div class="font-bold text-slate-800 leading-tight">${p.producto}</div>
+          <div class="text-[9px] text-blue-500 font-medium uppercase mt-1">${p.periodo || ''}</div>
+          <div class="flex items-center gap-1 mt-1">
+            <i class="material-icons" style="font-size: 10px; color: #64748b;">directions_car</i>
+            <span class="text-[10px] text-slate-500 font-medium italic">${unidadesCompatibles}</span>
+          </div>
+        </td>
+
+        <td class="p-3 text-slate-600 text-sm hide-on-mobile">${p.marca}</td>
+        <td class="p-3 text-slate-500 text-xs italic">${p.subModelo || '---'}</td>
+        <td class="p-3 text-center text-slate-400 font-semibold hide-on-mobile bg-gray-50/30">${p.stockInicial}</td>
+        <td class="p-3 text-center text-red-400 font-bold hide-on-mobile">${p.salidas}</td>
+        
+        <td class="p-3 text-center bg-blue-50/20">
+          <span class="font-bold text-base ${tieneAlertaStock ? 'text-red-600' : 'text-blue-700'}">${p.disponible}</span>
+          <div class="md:hidden text-[8px] text-gray-400 uppercase">Disponible</div>
+        </td>
+
+        <td class="p-3 text-center hide-on-mobile">
+           <span class="text-[10px] text-slate-400 font-black uppercase">${p.movimientos || 0}</span>
+           <div class="text-[8px] text-gray-300">MOVS</div>
+        </td>
+
+        <td class="p-3 text-center border-l border-gray-100">
+          <div class="flex items-center justify-center gap-2">
+            <button onclick="event.stopPropagation(); verHistorialDetallado('${encodeURIComponent(p.subModelo || p.producto)}')" 
+                    class="bg-blue-600 text-white rounded-lg p-2 shadow-sm">
+              <i class="material-icons" style="font-size:20px;">visibility</i>
+            </button>
+            ${tieneNotaPendiente ? `
+              <button onclick="event.stopPropagation(); verAlertaRapida('${idNota}')" 
+                      class="bg-amber-500 text-white rounded-lg p-2 animate-bounce">
+                <i class="material-icons" style="font-size:20px">notifications_active</i>
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+      
+      <tr id="extra-${p.idFila}" class="bg-slate-50">
+        <td colspan="9" class="p-0">
+          <div id="wrapper-${p.idFila}" class="faja-acciones">
+            <div class="p-4 flex flex-wrap justify-around gap-3">
+              <button onclick="prepararAccion('retiro', ${JSON.stringify(p).replace(/"/g, '&quot;')})" 
+                      class="flex-1 flex flex-col items-center bg-red-500 text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform">
+                <i class="material-icons">remove_circle</i>
+                <span class="text-[10px] font-bold mt-1">1. SALIDA</span>
+              </button>
+              
+              <button onclick="prepararAccion('reingreso', ${JSON.stringify(p).replace(/"/g, '&quot;')})" 
+                      class="flex-1 flex flex-col items-center bg-indigo-500 text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform">
+                <i class="material-icons">settings_backup_restore</i>
+                <span class="text-[10px] font-bold mt-1">2. RE-INGRESO</span>
+              </button>
+              
+              <button onclick="prepararAccion('agregar', ${JSON.stringify(p).replace(/"/g, '&quot;')})" 
+                      class="flex-1 flex flex-col items-center bg-emerald-500 text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform">
+                <i class="material-icons">add_circle</i>
+                <span class="text-[10px] font-bold mt-1">3. AGREGAR STOCK</span>
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+let ultimaFilaAbierta = null;
+
+let filaActivaId = null;
+
+
+
+function toggleAcciones(filaElemento, idFila) {
+  const filaExtra = document.getElementById(`extra-${idFila}`);
+  const wrapperActual = document.getElementById(`wrapper-${idFila}`);
+
+  if (filaActivaId === idFila) {
+    wrapperActual.classList.remove('abierta');
+    if (filaExtra) filaExtra.classList.add('fila-oculta'); // Ocultar al cerrar
+    filaElemento.classList.remove('seleccionada');
+    filaActivaId = null;
+    return;
+  }
+
+  // Cerrar todos los demás
+  document.querySelectorAll('.faja-acciones').forEach(w => w.classList.remove('abierta'));
+  document.querySelectorAll("[id^='extra-']").forEach(ex => ex.classList.add('fila-oculta'));
+  document.querySelectorAll('tr').forEach(f => f.classList.remove('seleccionada'));
+
+  // ABRIR EL SELECCIONADO
+  filaExtra.classList.remove('fila-oculta'); // Quitamos la clase del buscador
+  wrapperActual.classList.add('abierta');
+  filaElemento.classList.add('seleccionada');
+  filaActivaId = idFila;
+}
+
+function toggleMovimientos() {
+  const submenu = document.getElementById('submenuMovimientos');
+  const flecha = document.getElementById('flechaMov');
+  
+  // Toggle de la clase hidden (Tailwind)
+  submenu.classList.toggle('hidden');
+  
+  // Rotación de la flecha
+  if (submenu.classList.contains('hidden')) {
+    flecha.style.transform = 'rotate(0deg)';
+  } else {
+    flecha.style.transform = 'rotate(180deg)';
+  }
+}
+// Función para conectar con tus formularios actuales
+function prepararAccion(tipo, producto) {
+  // Estandarizamos el objeto para que el formulario de destino lo entienda siempre
+  const productoEstandar = {
+    idFila: producto.idFila || producto.id, // Aseguramos que lleve el ID de fila
+    producto: producto.producto,
+    marca: producto.marca,
+    subModelo: producto.subModelo || producto.sub,
+    disponible: producto.disponible,
+    tipo: producto.tipo
+  };
+
+  window.productoSeleccionadoParaFormulario = productoEstandar;
+  
+  let nombreVista = '';
+  if (tipo === 'retiro') nombreVista = 'retiro';
+  if (tipo === 'reingreso') nombreVista = 'reingreso';
+  if (tipo === 'agregar') nombreVista = 'stock';
+
+  cargarVista(nombreVista);
+}
+
+
+// Variable global para que historial.html la lea al cargar
+var subModeloPendiente = ""; 
+
+function verHistorialDetallado(subModeloCodificado) {
+  subModeloPendiente = decodeURIComponent(subModeloCodificado);
+  console.log("Guardando submodelo para búsqueda:", subModeloPendiente);
+
+  const vista = document.getElementById("vista");
+  vista.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-full min-h-[400px]">
+      <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 font-bold text-slate-700 animate-pulse">Abriendo bitácora...</p>
+    </div>`;
+
+  // Cargamos la vista. El script de historial.html se encargará del resto.
+  google.script.run.withSuccessHandler(html => {
+    vista.innerHTML = html;
+    
+    /* TRUCO VITAL: Forzamos la ejecución de los scripts inyectados
+       Esto resuelve el error "is not a function"
+    */
+    const scripts = vista.getElementsByTagName("script");
+    for (let i = 0; i < scripts.length; i++) {
+      eval(scripts[i].innerText);
+    }
+  }).cargarVistaParcial('historial'); 
+}
+
+
+function verAlertaRapida(idNota) {
+  const modal = document.getElementById('modalAlerta');
+  const contenido = document.getElementById('contenidoAlerta');
+  const footer = document.getElementById('footerAlerta');
+  
+  modal.style.display = 'flex';
+  contenido.innerHTML = '<p class="animate-pulse">Cargando detalles...</p>';
+  
+  google.script.run.withSuccessHandler(res => {
+    if(res.success) {
+      contenido.innerHTML = `
+        <p><strong>Fecha:</strong> ${res.fecha}</p>
+        <p><strong>Autor:</strong> ${res.autor}</p>
+        <div class="bg-amber-50 p-2 rounded italic mt-2 border-l-2 border-amber-200">
+          "${res.nota}"
+        </div>
+      `;
+      footer.innerHTML = `
+        <button onclick="irAResolverNota(${res.idFila})" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-xs hover:bg-slate-700">
+          GESTIONAR RESOLUCIÓN
+        </button>
+      `;
+    }
+  }).obtenerDetalleNotaPorId(idNota);
+}
+
+function cerrarAlerta() {
+  document.getElementById('modalAlerta').style.display = 'none';
+}
+
+function irAResolverNota(idFila) {
+  // 1. Cerramos el modal de alerta rápida
+  cerrarAlerta();
+  
+  // 2. Guardamos globalmente qué nota queremos abrir al cargar el módulo
+  window.notaPendientePorAbrir = idFila; 
+  
+  // 3. Cambiamos a la vista de notas
+  const btnNotas = document.querySelector('button[onclick*="notas"]');
+  cargarVista('notas', btnNotas);
+}
+
+
+document.addEventListener('input', function (e) {
+  if (e.target.id === 'buscador') {
+    const termino = e.target.value.toLowerCase().trim();
+    const filasPrincipales = document.querySelectorAll("#tablaInventario tr:not([id^='extra-'])");
+    
+    filasPrincipales.forEach(fila => {
+      const idFila = fila.getAttribute('onclick').match(/\d+/)[0];
+      const filaExtra = document.getElementById(`extra-${idFila}`);
+      const texto = fila.innerText.toLowerCase();
+
+      if (texto.includes(termino)) {
+        fila.classList.remove('fila-oculta');
+        // Si borramos la búsqueda, no mostramos los extras automáticamente,
+        // solo los dejamos disponibles para que el click funcione.
+      } else {
+        fila.classList.add('fila-oculta');
+        if (filaExtra) filaExtra.classList.add('fila-oculta');
+      }
+    });
+
+    // Resetear el estado para que el siguiente click sea limpio
+    filaActivaId = null;
+    document.querySelectorAll('.faja-acciones').forEach(w => w.classList.remove('abierta'));
+  }
+});
+
+document.addEventListener('click', function (e) {
+  // 1. Detectar el clic en el botón o en el icono dentro del botón
+  const btn = e.target.closest('.btn-acciones') || e.target.closest('[onclick*="abrirPanelAcciones"]'); 
+  
+  if (btn) {
+    // Evitamos que el clic haga scroll o recargue
+    e.preventDefault();
+    
+    // Intentamos obtener el ID de varias formas para asegurar
+    const id = btn.getAttribute('data-id') || btn.dataset.id;
+    
+    if (id && typeof abrirPanelAcciones === 'function') {
+      abrirPanelAcciones(id);
+    }
+  }
+});
+
+</script>
+
+</body>
+</html>
