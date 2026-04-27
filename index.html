@@ -83,7 +83,7 @@ border-left: 4px solid transparent !important;
   color: white !important;
   border-left: 4px solid #ef4444 !important; /* Solo una línea roja discreta */
 }
-button[data-view="inventario"]:not(.active-menu) {
+button[data-route="inventario"]:not(.active-menu) {
   background-color: transparent !important;
   color: #cbd5e1 !important;
   border-left: 4px solid transparent !important;
@@ -217,39 +217,39 @@ tr.seleccionada {
     </div>
 
     <nav class="space-y-1 flex-1 overflow-y-auto pr-1">
-  <button data-view="inventario" onclick="cargarVista('inventario', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="inventario" class="menuBtn rounded-lg">
     📊 <span class="text-sm font-medium">Panel Principal</span>
   </button>
 
-  <button data-view="notas" onclick="cargarVista('notas', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="notas" class="menuBtn rounded-lg">
     🚨 <span class="text-sm font-medium">Centro de Alertas</span>
   </button>
 
   <div class="menu-separator"></div>
 
-  <button data-view="nuevo" onclick="cargarVista('nuevo', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="nuevo" class="menuBtn rounded-lg">
     ➕ <span class="text-sm font-medium">Nuevo Registro</span>
   </button>
 
-  <button data-view="historialinsumos" onclick="cargarVista('historialinsumos', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="historial-cargas" class="menuBtn rounded-lg">
     📜 <span class="text-sm font-medium">Historial Cargas</span>
   </button>
 
-  <button data-view="historial_movimientos" onclick="cargarVista('historial_movimientos', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="log-general" class="menuBtn rounded-lg">
     📚 <span class="text-sm font-medium">Log General</span>
   </button>
 
-  <button data-view="mapa_almacen" onclick="cargarVista('mapa_almacen', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="mapa-almacen" class="menuBtn rounded-lg">
     🗺️ <span class="text-sm font-medium">Mapa del Almacén</span>
   </button>
 
   <div class="menu-separator"></div>
 
-  <button data-view="autorizaciones" onclick="cargarVista('autorizaciones', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="autorizaciones" class="menuBtn rounded-lg">
     ✅ <span class="text-sm font-medium">Autorizaciones</span>
   </button>
 
-  <button data-view="gestion_usuarios" onclick="cargarVista('gestion_usuarios', this)" class="menuBtn rounded-lg">
+  <button type="button" data-route="gestion-usuarios" class="menuBtn rounded-lg">
     👤 <span class="text-sm font-medium">Gestión de Usuarios</span>
   </button>
 </nav>
@@ -337,6 +337,100 @@ function shouldUseMockLogin() {
   return isMockLikeEnvironment() && !isAppsScriptEnvironment();
 }
 
+const ROUTES = {
+  inventario: { view: "inventario", label: "Panel Principal" },
+  notas: { view: "notas", label: "Centro de Alertas" },
+  nuevo: { view: "nuevo", label: "Nuevo Registro" },
+  "historial-cargas": { view: "historialinsumos", label: "Historial Cargas" },
+  "log-general": { view: "historial_movimientos", label: "Log General" },
+  "mapa-almacen": { view: "mapa_almacen", label: "Mapa del Almacén" },
+  autorizaciones: { view: "autorizaciones", label: "Autorizaciones" },
+  "gestion-usuarios": { view: "gestion_usuarios", label: "Gestión de Usuarios" }
+};
+
+function getBasePath() {
+  const configured = window.__INVENTORY_BASE_PATH__;
+  const raw = typeof configured === "string" && configured.trim() ? configured.trim() : "/";
+  const prefixed = raw.startsWith("/") ? raw : `/${raw}`;
+  const normalized = prefixed.endsWith("/") ? prefixed : `${prefixed}/`;
+  return normalized.replace(/\/{2,}/g, "/");
+}
+
+function getRouterMode() {
+  const configured = String(window.__INVENTORY_ROUTER_MODE__ || "auto").toLowerCase();
+  if (configured === "history" || configured === "hash") return configured;
+  const protocol = window.location.protocol;
+  const host = window.location.hostname;
+  const looksStatic = protocol === "file:" || host.endsWith("github.io");
+  return looksStatic ? "hash" : "history";
+}
+
+function normalizeRoute(route) {
+  const cleaned = String(route || "").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+  if (ROUTES[cleaned]) return cleaned;
+  return "inventario";
+}
+
+function getCurrentRoute() {
+  const mode = getRouterMode();
+  if (mode === "hash") {
+    const hash = window.location.hash.replace(/^#\/?/, "");
+    return normalizeRoute(hash);
+  }
+  const basePath = getBasePath();
+  let pathname = window.location.pathname || "/";
+  if (basePath !== "/" && pathname.startsWith(basePath)) {
+    pathname = pathname.slice(basePath.length);
+  } else if (basePath === "/" && pathname.startsWith("/")) {
+    pathname = pathname.slice(1);
+  }
+  return normalizeRoute(pathname);
+}
+
+function routeToUrl(route) {
+  const normalizedRoute = normalizeRoute(route);
+  const mode = getRouterMode();
+  if (mode === "hash") {
+    return `${window.location.pathname}${window.location.search}#/${normalizedRoute}`;
+  }
+  const basePath = getBasePath();
+  return `${basePath}${normalizedRoute}`;
+}
+
+function setActiveSidebarRoute(route) {
+  const normalizedRoute = normalizeRoute(route);
+  document.querySelectorAll(".menuBtn.active-menu").forEach((btn) => btn.classList.remove("active-menu"));
+  const activeBtn = document.querySelector(`.menuBtn[data-route="${normalizedRoute}"]`);
+  if (activeBtn) activeBtn.classList.add("active-menu");
+}
+
+function loadRoute(route, options) {
+  const opts = options || {};
+  const normalizedRoute = normalizeRoute(route);
+  const routeConfig = ROUTES[normalizedRoute];
+  if (!routeConfig) return;
+  const sidebarButton = document.querySelector(`.menuBtn[data-route="${normalizedRoute}"]`);
+  setActiveSidebarRoute(normalizedRoute);
+  cargarVista(routeConfig.view, sidebarButton || undefined, { skipActiveState: true });
+  if (opts.updateUrl === false) return;
+  const mode = getRouterMode();
+  if (mode === "history") {
+    const target = routeToUrl(normalizedRoute);
+    if (`${window.location.pathname}` !== target) {
+      window.history.pushState({ route: normalizedRoute }, "", target);
+    }
+  } else {
+    const targetHash = `#/${normalizedRoute}`;
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
+    }
+  }
+}
+
+function navigateToRoute(route) {
+  loadRoute(route, { updateUrl: true });
+}
+
 function setAppVisibility(showApp) {
   const sidebar = document.getElementById('sidebar');
   const content = document.querySelector('.content');
@@ -406,12 +500,8 @@ function cerrarSesion() {
 
 function iniciarAppPrincipal() {
   setAppVisibility(true);
-  const btnInventario = document.querySelector('button[data-view="inventario"]');
-  if (btnInventario) {
-    cargarVista('inventario', btnInventario);
-  } else {
-    cargarVista('inventario');
-  }
+  const currentRoute = getCurrentRoute();
+  loadRoute(currentRoute, { updateUrl: false });
 }
 
 function enviarWhatsAppResumenInventario() {
@@ -460,6 +550,22 @@ window.onload = () => {
     setAppVisibility(false);
     return;
   }
+  document.querySelectorAll(".menuBtn[data-route]").forEach((button) => {
+    button.addEventListener("click", function (event) {
+      const btn = event.target && event.target.closest ? event.target.closest(".menuBtn") : null;
+      const route = btn ? btn.getAttribute("data-route") : button.getAttribute("data-route");
+      if (!route) return;
+      navigateToRoute(route);
+    });
+  });
+  window.addEventListener("popstate", function () {
+    if (getRouterMode() !== "history") return;
+    loadRoute(getCurrentRoute(), { updateUrl: false });
+  });
+  window.addEventListener("hashchange", function () {
+    if (getRouterMode() !== "hash") return;
+    loadRoute(getCurrentRoute(), { updateUrl: false });
+  });
   iniciarAppPrincipal();
 };
 
@@ -470,14 +576,13 @@ window.onload = () => {
     content.classList.toggle("full-width");
   }
 
-function cargarVista(nombreVista, elemento) {
-  // 1. Gestión de UI del Sidebar
-  const botones = document.querySelectorAll('.menuBtn');
-  botones.forEach(btn => {
-    btn.classList.remove('active-menu');
-    btn.style.backgroundColor = ""; 
-  });
-  if (elemento) elemento.classList.add('active-menu');
+function cargarVista(nombreVista, elemento, options) {
+  const opts = options || {};
+  if (!opts.skipActiveState) {
+    document.querySelectorAll(".menuBtn.active-menu").forEach((btn) => btn.classList.remove("active-menu"));
+    const button = elemento && elemento.closest ? elemento.closest(".menuBtn") : null;
+    if (button) button.classList.add("active-menu");
+  }
 
   const vista = document.getElementById("vista");
   vista.innerHTML = `<div class="flex justify-center items-center h-full"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>`;
@@ -748,8 +853,7 @@ function irAResolverNota(idFila) {
   window.notaPendientePorAbrir = idFila; 
   
   // 3. Cambiamos a la vista de notas
-  const btnNotas = document.querySelector('button[onclick*="notas"]');
-  cargarVista('notas', btnNotas);
+  navigateToRoute('notas');
 }
 
 

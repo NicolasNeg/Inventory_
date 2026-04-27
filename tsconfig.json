@@ -14,14 +14,7 @@
     "resolveJsonModule": true,
     "types": ["google-apps-script", "vite/client"],
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@features/*": ["src/features/*"],
-      "@services/*": ["src/services/*"]
-    }
+    "isolatedModules": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]
