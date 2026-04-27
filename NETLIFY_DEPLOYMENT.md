@@ -7,6 +7,20 @@
 
 Configured in `netlify.toml`.
 
+## Current Entry Strategy
+
+Current phase uses **Option B (transition)**:
+
+- Legacy remains at `index.html` as fallback/reference.
+- React app is served from `react.html`.
+- Netlify publish is configured for React artifacts in `dist-react`.
+
+Planned promotion (**Option A**) after React InventoryPage is visually/functional stable:
+
+- React entry migrates to root `index.html`.
+- Legacy moves to `legacy.html`.
+- Netlify keeps SPA fallback but points to root React entry.
+
 ## SPA Fallback
 
 This project currently emits `react.html` as the React entry in `dist-react`.
@@ -27,6 +41,8 @@ Set these in Netlify site settings:
 - `VITE_SUPABASE_ANON_KEY`
 
 Use `.env.example` as template. Never store real values in git.
+
+If variables are absent, app falls back to mock adapter and remains navigable (read-only demo mode).
 
 ## Preview Deploy
 

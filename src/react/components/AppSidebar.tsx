@@ -3,7 +3,11 @@ import { SIDEBAR_MAIN_ROUTES } from "../navigation/routes";
 
 interface AppSidebarProps {
   collapsed: boolean;
+  mobileOpen: boolean;
   onToggle: () => void;
+  onCloseMobile: () => void;
+  userName: string;
+  onLogout: () => void;
 }
 
 const groups = {
@@ -12,9 +16,16 @@ const groups = {
   Administracion: SIDEBAR_MAIN_ROUTES.filter((r) => r.group === "Administracion")
 } as const;
 
-export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
+export function AppSidebar({ collapsed, mobileOpen, onToggle, onCloseMobile, userName, onLogout }: AppSidebarProps) {
   return (
-    <aside className={`app-sidebar ${collapsed ? "app-sidebar--collapsed" : ""}`}>
+    <>
+      <div
+        className={`app-sidebar__backdrop ${mobileOpen ? "app-sidebar__backdrop--visible" : ""}`}
+        onClick={onCloseMobile}
+      />
+      <aside
+        className={`app-sidebar ${collapsed ? "app-sidebar--collapsed" : ""} ${mobileOpen ? "app-sidebar--mobile-open" : ""}`}
+      >
       <div className="app-sidebar__brand">
         <div className="app-sidebar__logo">MEX Insumos</div>
         <button type="button" className="app-sidebar__collapse-btn" onClick={onToggle} aria-label="Toggle sidebar">
@@ -32,6 +43,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                   key={route.path}
                   to={route.path}
                   className={({ isActive }) => `app-sidebar__item ${isActive ? "app-sidebar__item--active" : ""}`}
+                  onClick={onCloseMobile}
                 >
                   {route.label}
                 </NavLink>
@@ -43,11 +55,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       <footer className="app-sidebar__footer">
         <p className="app-sidebar__user-label">Usuario activo</p>
-        <p className="app-sidebar__user-name">ANGEL ARMENTA</p>
-        <button type="button" className="app-sidebar__logout-btn">
+        <p className="app-sidebar__user-name">{userName}</p>
+        <button type="button" className="app-sidebar__logout-btn" onClick={onLogout}>
           Cerrar sesión
         </button>
       </footer>
-    </aside>
+      </aside>
+    </>
   );
 }

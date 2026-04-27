@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function NewItemPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Nuevo Registro</h1>
-      <p className="page-muted">Pantalla preparada para alta de productos. Escritura real a Supabase pendiente de validar schema y reglas.</p>
-    </section>
+    <ModulePlaceholder
+      title="Nuevo Registro"
+      description="Pantalla preparada para alta de productos."
+      nextSteps="Conectar formulario validado al schema products sin habilitar escrituras productivas todavía."
+    />
   );
 }

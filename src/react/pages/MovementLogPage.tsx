@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function MovementLogPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Log General</h1>
-      <p className="page-muted">Vista React base para movimientos de inventario.</p>
-    </section>
+    <ModulePlaceholder
+      title="Log General"
+      description="Vista base para movimientos de inventario."
+      nextSteps="Agregar filtros por rango de fecha, autor y tipo de movimiento."
+    />
   );
 }

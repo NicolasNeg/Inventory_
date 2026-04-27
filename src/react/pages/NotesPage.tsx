@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function NotesPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Centro de Alertas</h1>
-      <p className="page-muted">Vista React base para notas y alertas.</p>
-    </section>
+    <ModulePlaceholder
+      title="Centro de Alertas"
+      description="Vista React base para notas y alertas."
+      nextSteps="Listar notas de Supabase en modo read-only y agregar resolución controlada."
+    />
   );
 }

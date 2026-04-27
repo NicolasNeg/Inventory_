@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function WarehouseMapPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Mapa del Almacén</h1>
-      <p className="page-muted">Placeholder funcional para layout de mapa y slots.</p>
-    </section>
+    <ModulePlaceholder
+      title="Mapa del Almacén"
+      description="Módulo base para visualización de zonas y ubicación de stock."
+      nextSteps="Definir layout de almacenes y asociar inventario por ubicación."
+    />
   );
 }

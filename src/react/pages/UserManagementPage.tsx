@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function UserManagementPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Gestión de Usuarios</h1>
-      <p className="page-muted">Pantalla base para administración de perfiles, roles y permisos.</p>
-    </section>
+    <ModulePlaceholder
+      title="Gestión de Usuarios"
+      description="Pantalla base para administración de perfiles, roles y permisos."
+      nextSteps="Conectar profiles/roles/permissions con RLS activa."
+    />
   );
 }

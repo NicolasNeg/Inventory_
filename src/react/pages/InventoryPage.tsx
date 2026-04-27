@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { inventoryApi } from "../api/createInventoryApi";
+import { getDataMode, inventoryApi } from "../api/createInventoryApi";
 
 interface ProductRow {
   idFila?: number;
@@ -16,7 +16,9 @@ export function InventoryPage() {
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [error, setError] = useState<string | null>(null);
+  const dataMode = getDataMode();
 
   useEffect(() => {
     let cancelled = false;
@@ -43,20 +45,29 @@ export function InventoryPage() {
     return { requiere, critico, notas };
   }, [rows]);
 
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(rows.map((r) => String(r.tipo || "").trim()).filter(Boolean)));
+    return ["ALL", ...unique];
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.producto, r.marca, r.subModelo, r.tipo].some((v) => String(v || "").toLowerCase().includes(q))
-    );
-  }, [rows, query]);
+    return rows.filter((r) => {
+      const textOk = !q || [r.producto, r.marca, r.subModelo, r.tipo].some((v) => String(v || "").toLowerCase().includes(q));
+      const typeOk = typeFilter === "ALL" || String(r.tipo || "") === typeFilter;
+      return textOk && typeOk;
+    });
+  }, [rows, query, typeFilter]);
 
-  if (loading) return <p>Cargando inventario...</p>;
-  if (error) return <p className="page-error">Error: {error}</p>;
+  if (loading) return <p className="page-muted">Cargando inventario...</p>;
+  if (error) return <p className="page-error">Error controlado al cargar inventario: {error}</p>;
 
   return (
     <section className="page">
-      <h1 className="page-title">Panel Principal</h1>
+      <div className="page-head">
+        <h1 className="page-title">Panel Principal</h1>
+        <span className="page-badge">Modo datos: {dataMode === "supabase" ? "Supabase" : "Mock"}</span>
+      </div>
       <div className="kpi-grid">
         <article className="kpi-card">
           <p>Requiere surtido</p>
@@ -71,6 +82,18 @@ export function InventoryPage() {
           <strong>{stats.notas}</strong>
         </article>
       </div>
+      <div className="chip-row">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            className={`chip ${typeFilter === cat ? "chip--active" : ""}`}
+            onClick={() => setTypeFilter(cat)}
+          >
+            {cat === "ALL" ? "Todos" : cat}
+          </button>
+        ))}
+      </div>
       <div className="inventory-toolbar">
         <input
           className="inventory-search"
@@ -82,6 +105,11 @@ export function InventoryPage() {
           Foto QR
         </button>
       </div>
+      {filtered.length === 0 ? (
+        <div className="empty-state">
+          <p>No hay resultados para los filtros actuales.</p>
+        </div>
+      ) : null}
       <div className="table-wrap">
         <table className="inventory-table">
           <thead>

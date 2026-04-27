@@ -1,8 +1,11 @@
+import { ModulePlaceholder } from "../components/ModulePlaceholder";
+
 export function AuthorizationsPage() {
   return (
-    <section className="page">
-      <h1 className="page-title">Autorizaciones</h1>
-      <p className="page-muted">Pantalla base para flujo de autorización de movimientos.</p>
-    </section>
+    <ModulePlaceholder
+      title="Autorizaciones"
+      description="Pantalla base para flujo de autorización de movimientos."
+      nextSteps="Activar cola de autorizaciones y estados pendientes/aprobadas."
+    />
   );
 }

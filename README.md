@@ -8,6 +8,12 @@
   - Supabase adapter when env is configured.
   - Mock adapter for demo/fallback mode.
 
+### Entry Strategy (Current)
+
+- **Opción B activa:** `index.html` legacy intacto como respaldo.
+- React se prueba en `react.html` mientras se estabiliza AppShell + InventoryPage.
+- Plan futuro (**Opción A**): promover React a `index.html` y mover legacy a `legacy.html`.
+
 ## Commands
 
 - `npm run dev`
