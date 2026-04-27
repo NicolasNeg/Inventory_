@@ -5,6 +5,8 @@ This project keeps the legacy HTML shell (`index.html`) and adds a route layer t
 - `history` mode (preferred for real hosting with fallback to `index.html`)
 - `hash` mode (fallback for static environments without server rewrites)
 
+The React app also uses clean routes (`/inventario`, `/nuevo`, etc.) and is intended to run with SPA fallback on Netlify.
+
 ## Why History Mode For Real Host
 
 For production host + custom domain, clean URLs are required:

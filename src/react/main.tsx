@@ -1,12 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+import "./styles/app.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("#root no encontrado");
 
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );

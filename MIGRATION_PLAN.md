@@ -36,6 +36,14 @@
 
 ## Plan de migración por fases (incremental y verificable)
 
+### Actualización estratégica (React + Supabase + Netlify)
+
+- Host final objetivo: Netlify con fallback SPA.
+- Frontend objetivo: React + TypeScript + Vite.
+- Datos objetivo: Supabase (sin service role key en frontend).
+- Legacy (`index.html`) se mantiene temporalmente como referencia y fallback funcional.
+- No se elimina legacy hasta contar con reemplazo React funcional por módulos.
+
 ### Fase 0 - Baseline seguro (completada en esta iteración)
 - Crear documentación de migración (`MIGRATION_PLAN.md`).
 - Inicializar toolchain local sin tocar UI productiva.
