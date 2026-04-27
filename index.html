@@ -54,18 +54,9 @@
       margin-left: 0;
       width: 100%;
     }
-#submenuMovimientos {
-  transition: all 0.3s ease;
-}
-
-#flechaMov {
-  transition: transform 0.3s ease;
-}
-
-/* Para que los sub-botones se vean un poco más pequeños y elegantes */
-.bg-slate-800\/50 {
-  background-color: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.menu-separator {
+  margin: 10px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
 }
     .menuBtn { 
   display: flex; 
@@ -92,7 +83,7 @@ border-left: 4px solid transparent !important;
   color: white !important;
   border-left: 4px solid #ef4444 !important; /* Solo una línea roja discreta */
 }
-button[onclick*="inventario"]:not(.active-menu) {
+button[data-view="inventario"]:not(.active-menu) {
   background-color: transparent !important;
   color: #cbd5e1 !important;
   border-left: 4px solid transparent !important;
@@ -204,58 +195,60 @@ tr.seleccionada {
 
 <body class="flex overflow-hidden">
 
-  <div id="sidebar" class="text-white p-4 shadow-xl">
+  <div id="sidebar" class="text-white p-4 shadow-xl flex flex-col">
     <div onclick="toggleSidebar()" class="logo-btn mb-6 flex items-center justify-between">
       <h2 class="text-xl font-bold flex items-center gap-2">📦 <span>MEX Insumos</span></h2>
       <i class="material-icons text-slate-400">first_page</i>
     </div>
 
-    <nav class="space-y-1">
-  <button onclick="cargarVista('inventario', this)" class="menuBtn rounded-lg">
-    📊 <span class="text-sm font-medium">Inventario</span>
-  </button>
-  
-  <button onclick="cargarVista('nuevo', this)" class="menuBtn rounded-lg">
-    ➕ <span class="text-sm font-medium">Nuevo Insumo</span>
+    <nav class="space-y-1 flex-1 overflow-y-auto pr-1">
+  <button data-view="inventario" onclick="cargarVista('inventario', this)" class="menuBtn rounded-lg">
+    📊 <span class="text-sm font-medium">Panel Principal</span>
   </button>
 
-  <div class="collapsible-container">
-    <button onclick="toggleMovimientos()" class="menuBtn rounded-lg flex items-center justify-between w-full">
-      <div class="flex items-center">
-        🔄 <span class="ml-2 text-sm font-medium">Movimientos</span>
-      </div>
-      <i class="material-icons text-xs" id="flechaMov">keyboard_arrow_down</i>
-    </button>
-    
-    <div id="submenuMovimientos" class="hidden pl-4 space-y-1 mt-1">
-      <button onclick="cargarVista('retiro', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
-        <span class="text-xs">🔴 Salida (Retiro)</span>
-      </button>
-      <button onclick="cargarVista('reingreso', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
-        <span class="text-xs">↩️ Re-ingreso</span>
-      </button>
-      <button onclick="cargarVista('stock', this)" class="menuBtn rounded-lg w-full text-left bg-slate-800/50">
-        <span class="text-xs">♾️ Agregar Stock</span>
-      </button>
-    </div>
-  </div>
+  <button data-view="notas" onclick="cargarVista('notas', this)" class="menuBtn rounded-lg">
+    🚨 <span class="text-sm font-medium">Centro de Alertas</span>
+  </button>
 
-  <button onclick="cargarVista('historialinsumos', this)" class="menuBtn rounded-lg">
+  <div class="menu-separator"></div>
+
+  <button data-view="nuevo" onclick="cargarVista('nuevo', this)" class="menuBtn rounded-lg">
+    ➕ <span class="text-sm font-medium">Nuevo Registro</span>
+  </button>
+
+  <button data-view="historialinsumos" onclick="cargarVista('historialinsumos', this)" class="menuBtn rounded-lg">
     📜 <span class="text-sm font-medium">Historial Cargas</span>
   </button>
-  
-  <button onclick="cargarVista('historial_movimientos', this)" class="menuBtn rounded-lg">
-    🔄 <span class="text-sm font-medium">Log de Movs</span>
+
+  <button data-view="historial_movimientos" onclick="cargarVista('historial_movimientos', this)" class="menuBtn rounded-lg">
+    📚 <span class="text-sm font-medium">Log General</span>
   </button>
-  
-  <button onclick="cargarVista('notas', this)" class="menuBtn rounded-lg">
-    📝 <span class="text-sm font-medium">Notas y Alertas</span>
+
+  <button data-view="reportes" onclick="cargarVista('reportes', this)" class="menuBtn rounded-lg">
+    🗺️ <span class="text-sm font-medium">Mapa del Almacén</span>
   </button>
-  
-  <button onclick="cargarVista('reportes', this)" class="menuBtn rounded-lg">
-    🖨 <span class="text-sm font-medium">Reportes</span>
+
+  <div class="menu-separator"></div>
+
+  <button data-view="retiro" onclick="cargarVista('retiro', this)" class="menuBtn rounded-lg">
+    ✅ <span class="text-sm font-medium">Autorizaciones</span>
+  </button>
+
+  <button data-view="historial" onclick="cargarVista('historial', this)" class="menuBtn rounded-lg">
+    👤 <span class="text-sm font-medium">Gestión de Usuarios</span>
   </button>
 </nav>
+    <div class="mt-4 border-t border-slate-700/60 pt-3">
+      <div class="rounded-lg bg-slate-800/60 px-3 py-2">
+        <p class="text-[10px] uppercase tracking-wider text-slate-400">Usuario activo</p>
+        <div class="mt-1 flex items-center justify-between">
+          <span class="text-xs font-bold tracking-wide text-slate-100">ANGEL ARMENTA</span>
+          <button type="button" class="rounded p-1 text-slate-300 hover:bg-slate-700 hover:text-white" title="Cerrar sesión">
+            <i class="material-icons text-base">logout</i>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="modalAlerta" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
@@ -283,20 +276,6 @@ tr.seleccionada {
           </button>
           <div class="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true"></div>
           <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Sistema Inventario 2026</span>
-          <nav class="flex w-full flex-wrap items-center gap-1 sm:w-auto lg:gap-2" aria-label="Accesos rápidos">
-            <button type="button" onclick="irTopbar('notas')"
-              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
-              Centro de alertas
-            </button>
-            <button type="button" onclick="irTopbar('reportes')"
-              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
-              Autorizaciones
-            </button>
-            <button type="button" onclick="irTopbar('historial_movimientos')"
-              class="rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100">
-              Gestión de usuarios
-            </button>
-          </nav>
         </div>
 
         <div class="flex flex-wrap items-center justify-end gap-2">
@@ -325,19 +304,6 @@ tr.seleccionada {
   </div>
 
 <script>
-function irTopbar(destino) {
-  const sel =
-    destino === 'notas'
-      ? 'button[onclick*="notas"]'
-      : destino === 'reportes'
-        ? 'button[onclick*="reportes"]'
-        : destino === 'historial_movimientos'
-          ? 'button[onclick*="historial_movimientos"]'
-          : null;
-  const el = sel ? document.querySelector(sel) : null;
-  cargarVista(destino, el || undefined);
-}
-
 function enviarWhatsAppResumenInventario() {
   inventoryApi
     .obtenerProductos()
@@ -380,8 +346,8 @@ function imprimirPdfBarraSuperior() {
 }
 
 window.onload = () => {
-  // 1. Buscamos el botón de inventario específicamente por su acción
-  const btnInventario = document.querySelector('button[onclick*="inventario"]');
+  // 1. Buscamos el botón del panel principal por vista de inventario
+  const btnInventario = document.querySelector('button[data-view="inventario"]');
   
   // 2. Cargamos la vista inicial pasando el elemento para que se pinte correctamente
   if (btnInventario) {
@@ -500,7 +466,7 @@ function renderTabla(data) {
            <div class="text-[8px] text-gray-300">MOVS</div>
         </td>
 
-        <td class="p-3 text-center border-l border-gray-100">
+        <td class="sticky right-0 z-10 border-l border-gray-100 bg-white p-3 text-center min-w-[120px]">
           <div class="flex items-center justify-center gap-2">
             <button onclick="event.stopPropagation(); verHistorialDetallado('${encodeURIComponent(p.subModelo || p.producto)}')" 
                     class="bg-blue-600 text-white rounded-lg p-2 shadow-sm">
@@ -581,20 +547,6 @@ function toggleAcciones(filaElemento, idFila) {
   filaActivaId = idFila;
 }
 
-function toggleMovimientos() {
-  const submenu = document.getElementById('submenuMovimientos');
-  const flecha = document.getElementById('flechaMov');
-  
-  // Toggle de la clase hidden (Tailwind)
-  submenu.classList.toggle('hidden');
-  
-  // Rotación de la flecha
-  if (submenu.classList.contains('hidden')) {
-    flecha.style.transform = 'rotate(0deg)';
-  } else {
-    flecha.style.transform = 'rotate(180deg)';
-  }
-}
 // Función para conectar con tus formularios actuales
 function prepararAccion(tipo, producto) {
   // Estandarizamos el objeto para que el formulario de destino lo entienda siempre
