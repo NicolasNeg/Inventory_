@@ -1,0 +1,35 @@
+{
+  "name": "inventory_",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "echo \"No tests configured yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NicolasNeg/Inventory_.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NicolasNeg/Inventory_/issues"
+  },
+  "homepage": "https://github.com/NicolasNeg/Inventory_#readme",
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.8",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "eslint": "^10.2.1",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}
