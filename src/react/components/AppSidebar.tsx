@@ -33,7 +33,7 @@ export function AppSidebar({ collapsed, mobileOpen, onToggle, onCloseMobile, use
         </button>
       </div>
 
-      <nav className="app-sidebar__nav" aria-label="Main Navigation">
+      <nav id="app-sidebar-nav" className="app-sidebar__nav" aria-label="Main Navigation">
         {(Object.keys(groups) as Array<keyof typeof groups>).map((group) => (
           <section className="app-sidebar__group" key={group}>
             <h2 className="app-sidebar__group-title">{group}</h2>

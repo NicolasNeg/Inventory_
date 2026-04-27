@@ -13,6 +13,7 @@
 - **Opción B activa:** `index.html` legacy intacto como respaldo.
 - React se prueba en `react.html` mientras se estabiliza AppShell + InventoryPage.
 - Plan futuro (**Opción A**): promover React a `index.html` y mover legacy a `legacy.html`.
+- Plan detallado de promoción: `REACT_PROMOTION_PLAN.md`.
 
 ## Commands
 

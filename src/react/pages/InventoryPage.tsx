@@ -10,6 +10,7 @@ interface ProductRow {
   tipo?: string;
   reStockStatus?: string;
   statusNota?: string;
+  movimientos?: string | number;
 }
 
 export function InventoryPage() {
@@ -59,8 +60,26 @@ export function InventoryPage() {
     });
   }, [rows, query, typeFilter]);
 
-  if (loading) return <p className="page-muted">Cargando inventario...</p>;
-  if (error) return <p className="page-error">Error controlado al cargar inventario: {error}</p>;
+  if (loading) {
+    return (
+      <section className="page">
+        <div className="inventory-state-card">
+          <h1 className="page-title">Panel Principal</h1>
+          <p className="page-muted">Cargando inventario...</p>
+        </div>
+      </section>
+    );
+  }
+  if (error) {
+    return (
+      <section className="page">
+        <div className="inventory-state-card inventory-state-card--error">
+          <h1 className="page-title">Panel Principal</h1>
+          <p className="page-error">Error controlado al cargar inventario: {error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="page">
@@ -118,7 +137,9 @@ export function InventoryPage() {
               <th>Producto</th>
               <th>Marca</th>
               <th>Submodelo</th>
+              <th>Movimientos</th>
               <th>Disponible</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -128,7 +149,15 @@ export function InventoryPage() {
                 <td>{row.producto || "—"}</td>
                 <td>{row.marca || "—"}</td>
                 <td>{row.subModelo || "—"}</td>
+                <td>{row.movimientos ?? "—"}</td>
                 <td>{row.disponible ?? "—"}</td>
+                <td>
+                  {String(row.reStockStatus || "").includes("PEDIR STOCK") ? (
+                    <span className="table-badge table-badge--warn">Stock crítico</span>
+                  ) : (
+                    <span className="table-badge table-badge--ok">Estable</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

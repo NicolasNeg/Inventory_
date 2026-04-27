@@ -21,6 +21,8 @@ Planned promotion (**Option A**) after React InventoryPage is visually/functiona
 - Legacy moves to `legacy.html`.
 - Netlify keeps SPA fallback but points to root React entry.
 
+This promotion is intentionally not executed yet; details are tracked in `REACT_PROMOTION_PLAN.md`.
+
 ## SPA Fallback
 
 This project currently emits `react.html` as the React entry in `dist-react`.

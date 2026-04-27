@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { SIDEBAR_MAIN_ROUTES } from "../navigation/routes";
@@ -17,6 +17,18 @@ export function AppShell({ children, userName, authModeLabel, dataModeLabel, onL
   const location = useLocation();
   const activeRoute = SIDEBAR_MAIN_ROUTES.find((route) => location.pathname === route.path);
   const title = activeRoute ? activeRoute.label : "MEX Insumos";
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, []);
 
   return (
     <div className="app-shell">
@@ -36,6 +48,8 @@ export function AppShell({ children, userName, authModeLabel, dataModeLabel, onL
               className="app-shell__menu-btn"
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Abrir navegación"
+              aria-expanded={mobileOpen}
+              aria-controls="app-sidebar-nav"
             >
               ☰
             </button>
