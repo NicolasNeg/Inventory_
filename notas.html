@@ -194,304 +194,261 @@
   </div>
 
   <script>
-    (function() {
-    console.log("Iniciando carga de vista de notas...");
-    
-    // Ejecución inmediata de carga
-    cargarNotas();
-
-    // Cargar productos para el buscador del modal
-    inventoryApi.obtenerListaProductosSimplificada().then(res => {
-      productosRaw = res;
-    });
-
-    // Lógica para abrir desde la campana del inventario
-    // Usamos un intervalo corto para asegurar que el contenedor ya existe en el DOM
-    let intentos = 0;
-    const revisarPendiente = setInterval(() => {
-      if (window.notaPendientePorAbrir) {
-        console.log("Redirección detectada para fila:", window.notaPendientePorAbrir);
-        abrirResolver(window.notaPendientePorAbrir);
-        window.notaPendientePorAbrir = null;
-        clearInterval(revisarPendiente);
-      }
-      if (intentos > 10) clearInterval(revisarPendiente);
-      intentos++;
-    }, 500);
-  })();
-let productosRaw = [];
-  let idProductoSeleccionado = null; // Columna A (ID_ORDEN)
-  let productoSeleccionado = null;   // Columna C (Nombre)
-  let esExterna = false;
-
-window.onload = () => {
-    cargarNotas();
-    
-    // Traemos la lista de productos para el buscador
-    inventoryApi.obtenerListaProductosSimplificada().then(res => {
-      productosRaw = res;
-    });
-
-    // ¡EL TRUCO! Revisamos si venimos redirigidos desde el Inventario
-    setTimeout(() => {
-      if (window.notaPendientePorAbrir) {
-        console.log("Abriendo resolución automática para fila:", window.notaPendientePorAbrir);
-        abrirResolver(window.notaPendientePorAbrir);
-        
-        // Limpiamos la variable para que no se abra de nuevo al recargar
-        window.notaPendientePorAbrir = null;
-      }
-    }, 800); // Pequeño retraso para dar tiempo a que carguen las notas
-};
-
-function mostrarDatosEnPantalla(nota) {
-  document.getElementById('tituloVisualizar').innerText = nota.unidad;
-  document.getElementById('cuerpoNota').innerText = nota.nota;
-  document.getElementById('autorNota').innerText = "Registrada por: " + nota.autor;
-}
-
-    function toggleNotaExterna() {
-      esExterna = !esExterna;
-      const btn = document.getElementById('btnModo');
-      const areaProd = document.getElementById('areaProducto');
-      const areaTitu = document.getElementById('areaTitulo');
-      const txtModo = document.getElementById('txtModo');
-
-      if(esExterna) {
-        btn.classList.add('active');
-        areaProd.style.display = 'none';
-        areaTitu.style.display = 'block';
-        txtModo.innerText = "NOTA EXTERNA (GENERAL)";
-        btn.querySelector('i').innerText = "public";
-        productoSeleccionado = "";
-      } else {
-        btn.classList.remove('active');
-        areaProd.style.display = 'block';
-        areaTitu.style.display = 'none';
-        txtModo.innerText = "VINCULAR A PRODUCTO";
-        btn.querySelector('i').innerText = "inventory_2";
-      }
-    }
-function filtrarProductos() {
-    const query = document.getElementById('busquedaProd').value.toLowerCase().trim();
-    if (query === "") {
-      renderizarListaFiltrada(productosRaw);
+  (function () {
+    if (window.__notasViewBootstrapped) {
+      if (typeof window.__notasOnEnter === "function") window.__notasOnEnter();
       return;
     }
-    const filtrados = productosRaw.filter(p => p.nombre.toLowerCase().includes(query));
-    renderizarListaFiltrada(filtrados);
-  }
+    window.__notasViewBootstrapped = true;
 
-// 4. Cerrar la lista si se hace clic fuera del buscador
-document.addEventListener('click', function(event) {
-  const areaProd = document.getElementById('areaProducto');
-  const lista = document.getElementById('listaOpciones');
-  if (!areaProd.contains(event.target)) {
-    lista.style.display = 'none';
-  }
-});
-
-    function seleccionarProd(nombre) {
-productoSeleccionado = p.producto; 
-  idProductoSeleccionado = p.idOrden;
-      document.getElementById('busquedaProd').value = nombre;
-      document.getElementById('listaOpciones').style.display = 'none';
-    }
-
-    function cargarNotas() {
-      document.getElementById('contenedorNotas').innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px">Cargando...</p>';
-      inventoryApi.obtenerNotasHistorial().then(renderizarNotas);
-    }
-
-    
-function renderizarListaFiltrada(arreglo) {
-    const lista = document.getElementById('listaOpciones');
-    if (arreglo.length > 0) {
-      // IMPORTANTE: Pasamos el índice del arreglo para recuperar el objeto completo después
-      lista.innerHTML = arreglo.map((p, index) => `
-        <div class="option-item" onclick="confirmarSeleccion(${index}, '${arreglo === productosRaw ? 'raw' : 'filt'}')">
-          <i class="material-icons" style="font-size:14px; margin-right:8px; color:#cbd5e1">inventory_2</i>
-          ${p.nombre}
-        </div>
-      `).join('');
-      lista.style.display = 'block';
-    } else {
-      lista.innerHTML = '<div class="option-item" style="color:#94a3b8; cursor:default">No se encontraron resultados</div>';
-      lista.style.display = 'block';
-    }
-  }
- function renderizarNotas(notas) {
-  const container = document.getElementById('contenedorNotas');
-  
-  container.innerHTML = notas.map((n, i) => `
-    <div class="card-nota ${n.estado}" style="animation-delay: ${i*0.05}s">
-      
-      <div style="display:flex; justify-content:space-between">
-        <span style="font-weight:700; color:var(--mex-blue); font-size:0.85rem">${n.unidad}</span>
-        <span style="font-size:0.6rem; font-weight:800; color:${n.estado === 'RESUELTO' ? '#166534' : '#d32f2f'}">${n.estado}</span>
-      </div>
-      
-      <p style="margin:12px 0; font-size:0.95rem">${n.nota}</p>
-      
-      <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between">
-         <span><i class="material-icons" style="font-size:10px">person</i> Registró: ${n.autor}</span>
-         <span>${n.fecha}</span>
-      </div>
-
-      ${n.estado === 'PENDIENTE' 
-        ? `<button class="btn" style="background:var(--mex-blue); color:white; font-size:0.75rem; margin-top:12px; padding:8px 15px" onclick="abrirResolver(${n.idFila})">FINALIZAR</button>` 
-        : `
-          <div style="margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-               <span style="font-size: 0.65rem; color: #166534; font-weight: 800; text-transform: uppercase;">
-                 ✅ RESUELTO POR: ${n.autorRes}
-               </span>
-               <span style="font-size: 0.65rem; color: #15803d; font-weight: 600;">
-                 ${n.fechaRes}
-               </span>
-             </div>
-             <div style="font-size: 0.85rem; color: #15803d; font-style: italic;">
-               "${n.solucion}"
-             </div>
-          </div>
-          `
-      }
-    </div>
-  `).join('');
-}
-
-function guardarNota() {
-    const d = {
-      autor: document.getElementById('autor').value,
-      unidad: esExterna ? document.getElementById('inputTitulo').value : productoSeleccionado, 
-      nota: document.getElementById('mensaje').value,
-      idOrden: esExterna ? null : idProductoSeleccionado 
+    window.__notasState = {
+      productosRaw: [],
+      idProductoSeleccionado: null,
+      productoSeleccionado: null,
+      esExterna: false,
+      idFilaPendiente: null
     };
 
-    if(!d.autor || !d.unidad || !d.nota) return alert("Por favor completa todos los campos.");
+    const ADMINS_FIJOS = ["ANGEL ARMENTA", "JORGE LUGO", "OSVALDO SALAZAR", "GERARDO SERVIN", "ULISES TORRES"];
 
-    const btn = document.getElementById('btnGuardar');
-    btn.disabled = true;
-    document.getElementById('btnTxt').innerText = "GUARDANDO...";
-    document.getElementById('btnLoad').style.display = "block";
-
-    inventoryApi.crearNuevaNota(d).then(() => {
-      btn.disabled = false;
-      document.getElementById('btnTxt').innerText = "PUBLICAR NOTA";
-      document.getElementById('btnLoad').style.display = "none";
-      cerrarModales();
-      cargarNotas();
-      resetCampos();
-    });
-  }
-
-
-function resetCampos() {
-    document.getElementById('busquedaProd').value = "";
-    document.getElementById('inputTitulo').value = "";
-    document.getElementById('mensaje').value = "";
-    document.getElementById('autor').value = "";
-    idProductoSeleccionado = null;
-    productoSeleccionado = null;
-  }
-function mostrarTodoAlClick() {
-    const input = document.getElementById('busquedaProd');
-    if (input.value.trim() === "") {
-      renderizarListaFiltrada(productosRaw);
-    } else {
-      filtrarProductos();
+    function getState() {
+      return window.__notasState;
     }
-  }
-    function abrirModal() { document.getElementById('modalNota').style.display='flex'; }
-    function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
 
- const ADMINS_FIJOS = [
-    "ANGEL ARMENTA", 
-    "JORGE LUGO", 
-    "OSVALDO SALAZAR", 
-    "GERARDO SERVIN", 
-    "ULISES TORRES"
-  ];
-
-  function abrirResolver(fila) {
-    idFilaPendiente = fila;
-    document.getElementById('modalResolver').style.display = 'flex';
-    
-    const selectAdmin = document.getElementById('authAdmin');
-    
-    // Llenamos la lista directamente al instante, sin esperar al servidor
-    selectAdmin.innerHTML = '<option value="" disabled selected>Selecciona tu usuario...</option>' + 
-                            ADMINS_FIJOS.map(a => `<option value="${a}">${a}</option>`).join('');
-  }
-
-function ejecutarResolucion() {
-    const admin = document.getElementById('authAdmin').value;
-    const comentario = document.getElementById('authComentario').value;
-
-    // 1. Validamos que no falten datos (ya no pedimos contraseña)
-    if (!admin || !comentario) return alert("Selecciona tu nombre y añade el comentario de resolución.");
-
-    const btn = document.getElementById('btnResolver');
-    btn.disabled = true;
-    document.getElementById('txtBtnResolver').innerText = "RESOLVIENDO...";
-
-    // 2. Armamos el objeto exactamente como lo espera tu función de Apps Script
-    const datos = {
-      idFila: idFilaPendiente,
-      autorRes: admin,
-      solucion: comentario
-    };
-
-    // 3. Enviamos los datos al servidor
-    inventoryApi.resolverNota(datos).then(res => {
-        btn.disabled = false;
-        document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
-        
-        // Tu función gs devuelve { success: true }
-        if (res && res.success === true) {
-          cerrarModales();
-          cargarNotas(); // Recarga la lista para quitar la que acabamos de resolver
-          document.getElementById('authComentario').value = ""; // Limpiamos la caja de texto
-        } else {
-          alert("Hubo un problema al resolver la nota. Intenta de nuevo.");
-        }
-      })
-      .catch(err => {
-        btn.disabled = false;
-        document.getElementById('txtBtnResolver').innerText = "AUTORIZAR Y FINALIZAR";
-        alert("Error de conexión: " + err.message);
-      }); // Mandamos el objeto 'datos' a tu función resolverNota(d)
-  }
-
-    function imprimirReporte() {
-      inventoryApi.generarReporteHTML('HISTORIAL_NOTAS_PENDIENTES').then(html => {
-        var win = window.open();
-        win.document.write(html);
+    function cargarProductos() {
+      inventoryApi.obtenerListaProductosSimplificada().then(function (res) {
+        getState().productosRaw = Array.isArray(res) ? res : [];
       });
     }
 
-    function confirmarSeleccion(index, tipo) {
-    const query = document.getElementById('busquedaProd').value.toLowerCase().trim();
-    let p;
-    
-    if (tipo === 'raw' || query === "") {
-      p = productosRaw[index];
-    } else {
-      const filtrados = productosRaw.filter(prod => prod.nombre.toLowerCase().includes(query));
-      p = filtrados[index];
+    function cargarNotas() {
+      const cont = document.getElementById("contenedorNotas");
+      if (cont) cont.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px">Cargando...</p>';
+      inventoryApi.obtenerNotasHistorial().then(renderizarNotas);
     }
 
-    // Guardamos los datos globales
-    productoSeleccionado = p.nombre; 
-    idProductoSeleccionado = p.idOrden; 
+    function renderizarNotas(notas) {
+      const container = document.getElementById("contenedorNotas");
+      if (!container) return;
+      container.innerHTML = (notas || []).map((n, i) => `
+      <div class="card-nota ${n.estado}" style="animation-delay: ${i * 0.05}s">
+        <div style="display:flex; justify-content:space-between">
+          <span style="font-weight:700; color:var(--mex-blue); font-size:0.85rem">${n.unidad}</span>
+          <span style="font-size:0.6rem; font-weight:800; color:${n.estado === "RESUELTO" ? "#166534" : "#d32f2f"}">${n.estado}</span>
+        </div>
+        <p style="margin:12px 0; font-size:0.95rem">${n.nota}</p>
+        <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between">
+           <span><i class="material-icons" style="font-size:10px">person</i> Registró: ${n.autor}</span>
+           <span>${n.fecha}</span>
+        </div>
+        ${n.estado === "PENDIENTE"
+          ? `<button class="btn" style="background:var(--mex-blue); color:white; font-size:0.75rem; margin-top:12px; padding:8px 15px" onclick="abrirResolver(${n.idFila})">FINALIZAR</button>`
+          : `<div style="margin-top: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                 <span style="font-size: 0.65rem; color: #166534; font-weight: 800; text-transform: uppercase;">✅ RESUELTO POR: ${n.autorRes}</span>
+                 <span style="font-size: 0.65rem; color: #15803d; font-weight: 600;">${n.fechaRes}</span>
+               </div>
+               <div style="font-size: 0.85rem; color: #15803d; font-style: italic;">"${n.solucion}"</div>
+             </div>`
+        }
+      </div>`).join("");
+    }
 
-    // Actualizamos la UI
-    document.getElementById('busquedaProd').value = p.nombre;
-    document.getElementById('listaOpciones').style.display = 'none';
-    
-    console.log("Seleccionado:", idProductoSeleccionado);
-  }
+    function renderizarListaFiltrada(arreglo) {
+      const lista = document.getElementById("listaOpciones");
+      if (!lista) return;
+      if (!arreglo || arreglo.length === 0) {
+        lista.innerHTML = '<div class="option-item" style="color:#94a3b8; cursor:default">No se encontraron resultados</div>';
+        lista.style.display = "block";
+        return;
+      }
+      const snapshot = getState().productosRaw;
+      lista.innerHTML = arreglo.map((p, index) => `
+        <div class="option-item" onclick="confirmarSeleccion(${index}, '${arreglo === snapshot ? "raw" : "filt"}')">
+          <i class="material-icons" style="font-size:14px; margin-right:8px; color:#cbd5e1">inventory_2</i>${p.nombre}
+        </div>`).join("");
+      lista.style.display = "block";
+    }
 
+    window.filtrarProductos = function () {
+      const state = getState();
+      const input = document.getElementById("busquedaProd");
+      const query = String(input && input.value ? input.value : "").toLowerCase().trim();
+      if (query === "") {
+        renderizarListaFiltrada(state.productosRaw);
+        return;
+      }
+      renderizarListaFiltrada(state.productosRaw.filter((p) => String(p.nombre || "").toLowerCase().includes(query)));
+    };
+
+    window.mostrarTodoAlClick = function () {
+      const input = document.getElementById("busquedaProd");
+      if (!input || String(input.value || "").trim() === "") {
+        renderizarListaFiltrada(getState().productosRaw);
+        return;
+      }
+      window.filtrarProductos();
+    };
+
+    window.confirmarSeleccion = function (index, tipo) {
+      const state = getState();
+      const input = document.getElementById("busquedaProd");
+      const query = String(input && input.value ? input.value : "").toLowerCase().trim();
+      let p;
+      if (tipo === "raw" || query === "") {
+        p = state.productosRaw[index];
+      } else {
+        const filtrados = state.productosRaw.filter((prod) => String(prod.nombre || "").toLowerCase().includes(query));
+        p = filtrados[index];
+      }
+      if (!p) return;
+      state.productoSeleccionado = p.nombre;
+      state.idProductoSeleccionado = p.idOrden;
+      if (input) input.value = p.nombre;
+      const lista = document.getElementById("listaOpciones");
+      if (lista) lista.style.display = "none";
+    };
+
+    window.toggleNotaExterna = function () {
+      const state = getState();
+      state.esExterna = !state.esExterna;
+      const btn = document.getElementById("btnModo");
+      const areaProd = document.getElementById("areaProducto");
+      const areaTitu = document.getElementById("areaTitulo");
+      const txtModo = document.getElementById("txtModo");
+      if (!btn || !areaProd || !areaTitu || !txtModo) return;
+      const icon = btn.querySelector("i");
+      if (state.esExterna) {
+        btn.classList.add("active");
+        areaProd.style.display = "none";
+        areaTitu.style.display = "block";
+        txtModo.innerText = "NOTA EXTERNA (GENERAL)";
+        if (icon) icon.innerText = "public";
+        state.productoSeleccionado = "";
+      } else {
+        btn.classList.remove("active");
+        areaProd.style.display = "block";
+        areaTitu.style.display = "none";
+        txtModo.innerText = "VINCULAR A PRODUCTO";
+        if (icon) icon.innerText = "inventory_2";
+      }
+    };
+
+    window.abrirModal = function () {
+      const el = document.getElementById("modalNota");
+      if (el) el.style.display = "flex";
+    };
+    window.cerrarModales = function () {
+      document.querySelectorAll(".modal").forEach(function (m) {
+        m.style.display = "none";
+      });
+    };
+
+    window.guardarNota = function () {
+      const state = getState();
+      const d = {
+        autor: document.getElementById("autor").value,
+        unidad: state.esExterna ? document.getElementById("inputTitulo").value : state.productoSeleccionado,
+        nota: document.getElementById("mensaje").value,
+        idOrden: state.esExterna ? null : state.idProductoSeleccionado
+      };
+      if (!d.autor || !d.unidad || !d.nota) {
+        alert("Por favor completa todos los campos.");
+        return;
+      }
+      const btn = document.getElementById("btnGuardar");
+      if (btn) btn.disabled = true;
+      document.getElementById("btnTxt").innerText = "GUARDANDO...";
+      document.getElementById("btnLoad").style.display = "block";
+      inventoryApi.crearNuevaNota(d).then(function () {
+        if (btn) btn.disabled = false;
+        document.getElementById("btnTxt").innerText = "PUBLICAR NOTA";
+        document.getElementById("btnLoad").style.display = "none";
+        window.cerrarModales();
+        cargarNotas();
+        document.getElementById("busquedaProd").value = "";
+        document.getElementById("inputTitulo").value = "";
+        document.getElementById("mensaje").value = "";
+        document.getElementById("autor").value = "";
+        state.idProductoSeleccionado = null;
+        state.productoSeleccionado = null;
+      });
+    };
+
+    window.abrirResolver = function (fila) {
+      getState().idFilaPendiente = fila;
+      const modal = document.getElementById("modalResolver");
+      if (modal) modal.style.display = "flex";
+      const selectAdmin = document.getElementById("authAdmin");
+      if (selectAdmin) {
+        selectAdmin.innerHTML = '<option value="" disabled selected>Selecciona tu usuario...</option>' +
+          ADMINS_FIJOS.map((a) => `<option value="${a}">${a}</option>`).join("");
+      }
+    };
+
+    window.ejecutarResolucion = function () {
+      const state = getState();
+      const admin = document.getElementById("authAdmin").value;
+      const comentario = document.getElementById("authComentario").value;
+      if (!admin || !comentario) {
+        alert("Selecciona tu nombre y añade el comentario de resolución.");
+        return;
+      }
+      const btn = document.getElementById("btnResolver");
+      if (btn) btn.disabled = true;
+      document.getElementById("txtBtnResolver").innerText = "RESOLVIENDO...";
+      inventoryApi.resolverNota({ idFila: state.idFilaPendiente, autorRes: admin, solucion: comentario })
+        .then(function (res) {
+          if (btn) btn.disabled = false;
+          document.getElementById("txtBtnResolver").innerText = "AUTORIZAR Y FINALIZAR";
+          if (res && res.success === true) {
+            window.cerrarModales();
+            cargarNotas();
+            document.getElementById("authComentario").value = "";
+          } else {
+            alert("Hubo un problema al resolver la nota. Intenta de nuevo.");
+          }
+        })
+        .catch(function (err) {
+          if (btn) btn.disabled = false;
+          document.getElementById("txtBtnResolver").innerText = "AUTORIZAR Y FINALIZAR";
+          alert("Error de conexión: " + err.message);
+        });
+    };
+
+    window.imprimirReporte = function () {
+      inventoryApi.generarReporteHTML("HISTORIAL_NOTAS_PENDIENTES").then(function (html) {
+        const win = window.open();
+        if (win) win.document.write(html);
+      });
+    };
+
+    document.addEventListener("click", function (event) {
+      const areaProd = document.getElementById("areaProducto");
+      const lista = document.getElementById("listaOpciones");
+      if (!areaProd || !lista || !event || !event.target) return;
+      if (!areaProd.contains(event.target)) {
+        lista.style.display = "none";
+      }
+    });
+
+    window.__notasOnEnter = function () {
+      cargarNotas();
+      cargarProductos();
+    };
+    window.__notasOnEnter();
+
+    let intentos = 0;
+    const revisarPendiente = setInterval(function () {
+      if (window.notaPendientePorAbrir) {
+        window.abrirResolver(window.notaPendientePorAbrir);
+        window.notaPendientePorAbrir = null;
+        clearInterval(revisarPendiente);
+      }
+      intentos += 1;
+      if (intentos > 10) clearInterval(revisarPendiente);
+    }, 500);
+  })();
   </script>
 </body>
 </html>
